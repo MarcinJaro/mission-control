@@ -310,11 +310,11 @@ function TaskDetail({
     });
   };
 
-  const handleToggleAssignee = async (agentId: string) => {
+  const handleToggleAssignee = async (agentId: Id<"agents">) => {
     if (!fullTask) return;
     const currentIds = fullTask.assigneeIds || [];
     const newIds = currentIds.includes(agentId)
-      ? currentIds.filter((id: string) => id !== agentId)
+      ? currentIds.filter((id) => id !== agentId)
       : [...currentIds, agentId];
     await assignTask({
       id: task._id,
