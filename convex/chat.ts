@@ -103,6 +103,15 @@ export const send = mutation({
       createdAt: Date.now(),
     });
     
+    // Trigger webhook asynchronously
+    await ctx.scheduler.runAfter(0, api.chat.triggerWebhook, {
+      messageId,
+      authorId: args.authorId,
+      authorName: args.authorName,
+      content: args.content,
+      mentions,
+    });
+    
     // Log activity
     // Note: We'd need to resolve agent ID from sessionKey for proper activity logging
     // For now, skip activity logging for chat messages
@@ -163,6 +172,44 @@ export const logRouterDecision = mutation({
     });
     
     return { decisionId };
+  },
+});
+
+// ============ ACTIONS ============
+
+// Trigger webhook for new message (called via scheduler)
+export const triggerWebhook = action({
+  args: {
+    messageId: v.id("chatMessages"),
+    authorId: v.string(),
+    authorName: v.string(),
+    content: v.string(),
+    mentions: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    try {
+      // Get Convex site URL from environment or construct it
+      const siteUrl = process.env.CONVEX_SITE_URL || "https://disciplined-wombat-115.convex.site";
+      
+      const response = await fetch(`${siteUrl}/chat/webhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageId: args.messageId,
+          authorId: args.authorId,
+          authorName: args.authorName,
+          content: args.content,
+          mentions: args.mentions,
+        }),
+      });
+      
+      const result = await response.json();
+      console.log("Webhook triggered successfully:", result);
+      return { success: true, result };
+    } catch (error) {
+      console.error("Failed to trigger webhook:", error);
+      return { success: false, error: String(error) };
+    }
   },
 });
 
