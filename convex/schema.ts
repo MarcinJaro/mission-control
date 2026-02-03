@@ -136,6 +136,35 @@ export default defineSchema({
     .index("by_agent", ["agentId"])
     .index("by_createdAt", ["createdAt"]),
 
+  // Chat Messages - MC Chat for agent coordination
+  chatMessages: defineTable({
+    authorType: v.union(v.literal("human"), v.literal("agent")),
+    authorId: v.string(), // sessionKey or "marcin"
+    authorName: v.string(), // Display name
+    content: v.string(),
+    mentions: v.array(v.string()), // @mentioned sessionKeys
+    taskId: v.optional(v.id("tasks")), // Optional link to task
+    replyToId: v.optional(v.id("chatMessages")), // Threading
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_author", ["authorId"])
+    .index("by_task", ["taskId"]),
+
+  // Router Decisions - audit trail for message routing
+  routerDecisions: defineTable({
+    messageId: v.id("chatMessages"),
+    targets: v.array(v.string()), // sessionKeys to trigger
+    reasoning: v.string(), // Why these agents
+    model: v.string(), // haiku / gpt-4o-mini
+    cost: v.number(), // API cost in USD
+    triggered: v.boolean(), // Did we actually trigger?
+    createdAt: v.number(),
+  })
+    .index("by_message", ["messageId"])
+    .index("by_createdAt", ["createdAt"]),
+
   // Notifications - @mentions and alerts
   notifications: defineTable({
     targetAgentId: v.id("agents"),
