@@ -4,37 +4,92 @@ import { api } from "./_generated/api";
 
 const http = httpRouter();
 
-// POST /chat/webhook - wywoływane przez Convex trigger po nowej wiadomości
+// Wake endpoint URL (Zosia webhook server z tunelem)
+const WAKE_ENDPOINT = "https://zosia.creativerebels.pl/mc-chat/wake";
+
+// POST /chat/webhook - wywoływane automatycznie po nowej wiadomości w chacie
 http.route({
   path: "/chat/webhook",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     const body = await request.json();
-    // body zawiera: messageId, authorId, authorName, content, mentions
+    const { messageId, authorId, authorName, content, mentions } = body;
     
-    console.log("New chat message webhook triggered:", body);
+    console.log("MC Chat webhook:", { authorId, authorName, content, mentions });
     
-    // TODO: W przyszłości wywołaj OpenClaw Gateway API
-    // const openclawUrl = process.env.OPENCLAW_GATEWAY_URL || "http://localhost:8080";
-    // try {
-    //   const response = await fetch(`${openclawUrl}/api/cron/wake`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       sessionKey: "bestia", // lub dynamicznie z mentions
-    //       reason: `New chat message from ${body.authorName}`,
-    //       messageId: body.messageId,
-    //     }),
-    //   });
-    //   console.log("Wake agent response:", await response.text());
-    // } catch (err) {
-    //   console.error("Failed to wake agent:", err);
-    // }
+    // Nie budź autora wiadomości
+    if (!authorId || authorId === "system") {
+      return new Response(JSON.stringify({ ok: true, skipped: "system message" }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    
+    // Wywołaj Gemini router żeby zdecydować kogo obudzić
+    let targets: string[] = [];
+    let reasoning = "";
+    
+    try {
+      const routerResult = await ctx.runAction(api.router.routeMessage, {
+        content: content || "",
+        authorId: authorId,
+        mentions: mentions || [],
+      });
+      targets = routerResult.targets || [];
+      reasoning = routerResult.reasoning || "";
+      console.log("Router decision:", { targets, reasoning });
+    } catch (err) {
+      console.error("Router error:", err);
+      // Fallback do main jeśli router zawiedzie
+      targets = ["main"];
+      reasoning = "Router error, fallback to main";
+    }
+    
+    // Odfiltruj autora z targets
+    targets = targets.filter(t => t !== authorId);
+    
+    if (targets.length === 0) {
+      console.log("No agents to wake");
+      return new Response(JSON.stringify({ ok: true, targets: [], reasoning }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    
+    // Budź każdego agenta przez webhook
+    const wakePromises = targets.map(async (agentId) => {
+      try {
+        const mcChatMessage = `[MC Chat] ${authorName} napisał: "${content}"
+
+Odpowiedz na PROD:
+cd ~/.openclaw/workspace-main/projects/mission-control && npx convex run --prod chat:send '{"authorType":"agent","authorId":"${agentId}","authorName":"TWOJA_NAZWA","content":"TWOJA ODPOWIEDŹ"}'`;
+
+        const response = await fetch(WAKE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            agentId,
+            message: mcChatMessage,
+            authorName,
+            content,
+          }),
+        });
+        
+        const result = await response.json();
+        console.log(`Wake ${agentId}:`, result);
+        return { agentId, success: true };
+      } catch (err) {
+        console.error(`Failed to wake ${agentId}:`, err);
+        return { agentId, success: false, error: String(err) };
+      }
+    });
+    
+    const results = await Promise.all(wakePromises);
     
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        received: body,
+        targets,
+        reasoning,
+        wakeResults: results,
         timestamp: Date.now() 
       }), 
       {
