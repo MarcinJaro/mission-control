@@ -267,6 +267,45 @@ export const assign = mutation({
   },
 });
 
+// Delete a task
+export const deleteTask = mutation({
+  args: { 
+    id: v.id("tasks"),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) {
+      throw new Error("Task not found");
+    }
+    
+    // Delete associated messages
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_task", (q) => q.eq("taskId", args.id))
+      .collect();
+    
+    for (const msg of messages) {
+      await ctx.db.delete(msg._id);
+    }
+    
+    // Delete associated notifications (if they reference this task)
+    const notifications = await ctx.db
+      .query("notifications")
+      .filter((q) => q.eq(q.field("referenceId"), args.id.toString()))
+      .collect();
+    
+    for (const notif of notifications) {
+      await ctx.db.delete(notif._id);
+    }
+    
+    // Delete the task
+    await ctx.db.delete(args.id);
+    
+    return { deleted: true, title: task.title };
+  },
+});
+
 // Get tasks by status (for Kanban)
 export const byStatus = query({
   args: {},

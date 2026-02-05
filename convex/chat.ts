@@ -82,8 +82,36 @@ export const send = mutation({
     content: v.string(),
     taskId: v.optional(v.id("tasks")),
     replyToId: v.optional(v.id("chatMessages")),
+    // Security: require secret for human messages to prevent spoofing
+    humanSecret: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Security: Block human messages without valid secret
+    // This prevents web UI from spoofing as human
+    if (args.authorType === "human") {
+      const expectedSecret = process.env.MC_HUMAN_SECRET;
+      if (expectedSecret && args.humanSecret !== expectedSecret) {
+        throw new Error("Unauthorized: Invalid human secret");
+      }
+    }
+    
+    // Security: Basic content filtering (block dangerous commands)
+    const dangerousPatterns = [
+      /rm\s+-rf/i,
+      /mkfs\./i,
+      /dd\s+if=/i,
+      />\s*\/dev\/(sd|hd|nvme)/i,
+      /chmod\s+777\s+\//i,
+      /:(){ :|:& };:/,  // Fork bomb
+    ];
+    
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(args.content)) {
+        console.warn(`[SECURITY] Blocked dangerous content from ${args.authorId}: ${args.content.substring(0, 100)}`);
+        throw new Error("Content blocked by security filter");
+      }
+    }
+    
     // Extract @mentions from content
     const mentionRegex = /@(\w+)/g;
     const mentions: string[] = [];
@@ -117,6 +145,20 @@ export const send = mutation({
     // For now, skip activity logging for chat messages
     
     return { messageId, mentions };
+  },
+});
+
+// Delete a message (admin only)
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("chatMessages"),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error("Message not found");
+    
+    await ctx.db.delete(args.messageId);
+    return { deleted: true, content: message.content.substring(0, 50) };
   },
 });
 
