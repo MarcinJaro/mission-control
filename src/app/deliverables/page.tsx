@@ -122,13 +122,14 @@ export default function DeliverablesPage() {
 
   const fetchDeliverables = async () => {
     try {
-      const res = await fetch("/api/deliverables");
+      // Fetch from local maverick server via tunnel
+      const res = await fetch("https://maverick.creativerebels.pl/api/files");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setData(json);
       setError(null);
     } catch (err) {
-      setError("Failed to load deliverables");
+      setError("Failed to load deliverables - is maverick server running?");
       console.error(err);
     } finally {
       setLoading(false);
