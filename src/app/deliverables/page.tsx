@@ -1,5 +1,8 @@
 "use client";
 
+// Force dynamic rendering (skip static generation)
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from "react";
 
 interface DeliverableFile {
