@@ -2,157 +2,135 @@
 
 import { useState, useEffect } from "react";
 
-// Maverick's deliverables data
-const DELIVERABLES = {
-  documents: [
-    {
-      id: "competitor-matrix",
-      name: "Competitor Pricing Matrix",
-      description: "Senuto, Surfer, Contadu, MarketMuse — pricing, features, positioning vs BuzzRank.",
-      type: "Strategy",
-      project: "BuzzRank",
-      date: "2026-02-04",
-      path: "buzzrank-competitor-pricing-matrix.md",
-    },
-    {
-      id: "testimonial-template",
-      name: "Testimonial Collection Template",
-      description: "Kwestionariusz, formaty (cytat, case study, video), placement guide.",
-      type: "Template",
-      project: "BuzzRank",
-      date: "2026-02-04",
-      path: "buzzrank-testimonial-template.md",
-    },
-    {
-      id: "landing-copy",
-      name: "Landing Page Copy (PL)",
-      description: "4 warianty headline, wszystkie sekcje przetłumaczone, CTA po polsku.",
-      type: "Copy",
-      project: "BuzzRank",
-      date: "2026-02-04",
-      path: "buzzrank-landing-copy-pl.md",
-    },
-    {
-      id: "onboarding-emails",
-      name: "Onboarding Email Sequence",
-      description: "5 emaili: Welcome → Feature → Success → Upgrade → Win-back.",
-      type: "Email",
-      project: "BuzzRank",
-      date: "2026-02-04",
-      path: "buzzrank-onboarding-emails.md",
-    },
-    {
-      id: "linkedin-pack",
-      name: "LinkedIn Content Pack",
-      description: "Company page setup, 3 launch posty, content calendar, hashtagi.",
-      type: "Social",
-      project: "BuzzRank",
-      date: "2026-02-04",
-      path: "buzzrank-linkedin-content-pack.md",
-    },
-  ],
-  graphics: [
-    {
-      id: "linkedin-banner",
-      name: "LinkedIn Banner",
-      description: "Cover image for LinkedIn company page. 2816x1536px.",
-      type: "Banner",
-      project: "BuzzRank",
-      date: "2026-02-03",
-      path: "2026-02-03-buzzrank-linkedin-banner.png",
-    },
-    {
-      id: "linkedin-post-1",
-      name: "LinkedIn Post Horizontal",
-      description: "Workflow visualization. 2848x1504px.",
-      type: "Post",
-      project: "BuzzRank",
-      date: "2026-02-03",
-      path: "2026-02-03-buzzrank-linkedin-post-1.png",
-    },
-    {
-      id: "linkedin-square",
-      name: "LinkedIn Square Post",
-      description: "AI content creation visual. 2048x2048px.",
-      type: "Square",
-      project: "BuzzRank",
-      date: "2026-02-03",
-      path: "2026-02-03-buzzrank-linkedin-square.png",
-    },
-  ],
-};
+interface DeliverableFile {
+  id: string;
+  name: string;
+  agent: string;
+  agentName: string;
+  agentEmoji: string;
+  mtime: string;
+  size: number;
+  sizeFormatted: string;
+  ext: string;
+  isImage: boolean;
+  downloadUrl: string;
+}
 
-const TYPE_COLORS: Record<string, string> = {
-  Strategy: "bg-blue-500/20 text-blue-400",
-  Template: "bg-purple-500/20 text-purple-400",
-  Copy: "bg-emerald-500/20 text-emerald-400",
-  Email: "bg-amber-500/20 text-amber-400",
-  Social: "bg-pink-500/20 text-pink-400",
-  Banner: "bg-orange-500/20 text-orange-400",
-  Post: "bg-cyan-500/20 text-cyan-400",
-  Square: "bg-indigo-500/20 text-indigo-400",
+interface ApiResponse {
+  files: DeliverableFile[];
+  count: number;
+  sources: { agent: string; name: string; emoji: string }[];
+}
+
+const EXT_ICONS: Record<string, string> = {
+  ".md": "📝",
+  ".txt": "📄",
+  ".json": "📊",
+  ".csv": "📊",
+  ".pdf": "📕",
+  ".html": "🌐",
+  ".png": "🖼️",
+  ".jpg": "🖼️",
+  ".jpeg": "🖼️",
+  ".gif": "🖼️",
+  ".webp": "🖼️",
 };
 
 function FileCard({ 
   file, 
-  onCopyPath 
+  onCopyPath,
+  showAgent = true,
 }: { 
-  file: typeof DELIVERABLES.documents[0]; 
+  file: DeliverableFile; 
   onCopyPath: (path: string) => void;
+  showAgent?: boolean;
 }) {
-  const basePath = "~/.openclaw/agents/marketing/workspace";
-  const isGraphic = file.path.endsWith('.png') || file.path.endsWith('.jpg');
-  const fullPath = isGraphic 
-    ? `${basePath}/${file.path}`
-    : `${basePath}/deliverables/${file.path}`;
+  const icon = EXT_ICONS[file.ext] || "📄";
+  const isNew = (Date.now() - new Date(file.mtime).getTime()) < 3600000; // Last hour
+  const date = new Date(file.mtime);
+  const timeStr = date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = date.toISOString().split("T")[0];
 
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 hover:border-zinc-700 transition-all hover:shadow-lg group">
       <div className="flex items-start justify-between mb-3">
-        <span className="text-2xl">
-          {isGraphic ? "🖼️" : "📄"}
-        </span>
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[file.type] || "bg-zinc-700 text-zinc-300"}`}>
-          {file.type}
-        </span>
+        <span className="text-2xl">{icon}</span>
+        <div className="flex items-center gap-2">
+          {isNew && (
+            <span className="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full text-xs font-medium">
+              NEW
+            </span>
+          )}
+          {showAgent && (
+            <span className="text-xs bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">
+              {file.agentEmoji} {file.agentName}
+            </span>
+          )}
+        </div>
       </div>
       
-      <h3 className="font-semibold text-white mb-1">{file.name}</h3>
-      <p className="text-sm text-zinc-400 mb-3 line-clamp-2">{file.description}</p>
+      <h3 className="font-semibold text-white mb-1 truncate" title={file.name}>
+        {file.name}
+      </h3>
       
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs bg-zinc-800 px-2 py-0.5 rounded text-zinc-500">
-          {file.project}
-        </span>
-        <span className="text-xs text-zinc-600">{file.date}</span>
+      <div className="flex items-center gap-2 mb-3 text-xs text-zinc-500">
+        <span>{dateStr}</span>
+        <span>•</span>
+        <span>{timeStr}</span>
+        <span>•</span>
+        <span>{file.sizeFormatted}</span>
       </div>
       
       <div className="flex items-center gap-2 pt-3 border-t border-zinc-800">
-        <button
-          onClick={() => onCopyPath(fullPath)}
+        <a
+          href={file.downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
-          <span>📋</span>
-          <span>Copy Path</span>
-        </button>
-        <button
-          onClick={() => {
-            const cmd = isGraphic ? `open "${fullPath}"` : `cat "${fullPath}"`;
-            navigator.clipboard.writeText(cmd);
-          }}
+          <span>👁️</span>
+          <span>View</span>
+        </a>
+        <a
+          href={`${file.downloadUrl}?download=true`}
           className="bg-orange-600 hover:bg-orange-500 text-sm px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
-          <span>📂</span>
-          <span>Open</span>
-        </button>
+          <span>⬇️</span>
+          <span>Download</span>
+        </a>
       </div>
     </div>
   );
 }
 
 export default function DeliverablesPage() {
+  const [data, setData] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [agentFilter, setAgentFilter] = useState<string>("all");
   const [copied, setCopied] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string>("all");
+
+  useEffect(() => {
+    fetchDeliverables();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchDeliverables, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchDeliverables = async () => {
+    try {
+      const res = await fetch("/api/deliverables");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const json = await res.json();
+      setData(json);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load deliverables");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopyPath = (path: string) => {
     navigator.clipboard.writeText(path);
@@ -160,16 +138,27 @@ export default function DeliverablesPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const allFiles = [...DELIVERABLES.documents, ...DELIVERABLES.graphics];
-  const projects = [...new Set(allFiles.map(f => f.project))];
-  
-  const filteredDocs = filter === "all" 
-    ? DELIVERABLES.documents 
-    : DELIVERABLES.documents.filter(d => d.project === filter);
-  
-  const filteredGraphics = filter === "all"
-    ? DELIVERABLES.graphics
-    : DELIVERABLES.graphics.filter(g => g.project === filter);
+  const filteredFiles = data?.files.filter(
+    f => agentFilter === "all" || f.agent === agentFilter
+  ) || [];
+
+  // Group by date
+  const byDate: Record<string, DeliverableFile[]> = {};
+  filteredFiles.forEach(f => {
+    const dateKey = f.mtime.split("T")[0];
+    if (!byDate[dateKey]) byDate[dateKey] = [];
+    byDate[dateKey].push(f);
+  });
+  const sortedDates = Object.keys(byDate).sort().reverse();
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+  // Stats per agent
+  const agentStats = data?.sources.map(s => ({
+    ...s,
+    count: data.files.filter(f => f.agent === s.agent).length,
+  })) || [];
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -199,17 +188,25 @@ export default function DeliverablesPage() {
           
           {/* Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-500">Project:</span>
+            <span className="text-sm text-zinc-500">Agent:</span>
             <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
               className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm"
             >
-              <option value="all">All Projects</option>
-              {projects.map(p => (
-                <option key={p} value={p}>{p}</option>
+              <option value="all">All Agents ({data?.count || 0})</option>
+              {agentStats.map(s => (
+                <option key={s.agent} value={s.agent}>
+                  {s.emoji} {s.name} ({s.count})
+                </option>
               ))}
             </select>
+            <button
+              onClick={fetchDeliverables}
+              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm transition-colors"
+            >
+              🔄
+            </button>
           </div>
         </div>
       </header>
@@ -224,64 +221,75 @@ export default function DeliverablesPage() {
       {/* Content */}
       <main className="max-w-7xl mx-auto p-6">
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-            <div className="text-3xl font-bold text-orange-500">{DELIVERABLES.documents.length}</div>
-            <div className="text-sm text-zinc-500">Documents</div>
-          </div>
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-            <div className="text-3xl font-bold text-orange-500">{DELIVERABLES.graphics.length}</div>
-            <div className="text-sm text-zinc-500">Graphics</div>
-          </div>
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-            <div className="text-3xl font-bold text-orange-500">{projects.length}</div>
-            <div className="text-sm text-zinc-500">Projects</div>
-          </div>
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-            <div className="text-3xl font-bold text-emerald-500">70%</div>
-            <div className="text-sm text-zinc-500">BuzzRank Ready</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {agentStats.map(s => (
+            <button
+              key={s.agent}
+              onClick={() => setAgentFilter(s.agent === agentFilter ? "all" : s.agent)}
+              className={`rounded-xl border p-4 transition-all ${
+                s.agent === agentFilter
+                  ? "bg-orange-600/20 border-orange-500"
+                  : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
+              }`}
+            >
+              <div className="text-2xl mb-1">{s.emoji}</div>
+              <div className="text-2xl font-bold text-orange-500">{s.count}</div>
+              <div className="text-xs text-zinc-500">{s.name}</div>
+            </button>
+          ))}
         </div>
 
-        {/* Info Box */}
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 mb-8">
-          <p className="text-sm text-zinc-400">
-            <span className="text-orange-500 font-medium">📂 Base path:</span>{" "}
-            <code className="bg-zinc-800 px-2 py-0.5 rounded">~/.openclaw/agents/marketing/workspace/</code>
-          </p>
-        </div>
-
-        {/* Documents */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <span>📄</span>
-            <span>Documents</span>
-            <span className="text-sm font-normal text-zinc-500">({filteredDocs.length})</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredDocs.map(doc => (
-              <FileCard key={doc.id} file={doc} onCopyPath={handleCopyPath} />
-            ))}
+        {/* Loading/Error */}
+        {loading && (
+          <div className="text-center py-12 text-zinc-500">
+            Loading deliverables...
           </div>
-        </section>
+        )}
 
-        {/* Graphics */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <span>🖼️</span>
-            <span>Graphics</span>
-            <span className="text-sm font-normal text-zinc-500">({filteredGraphics.length})</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredGraphics.map(graphic => (
-              <FileCard key={graphic.id} file={graphic} onCopyPath={handleCopyPath} />
-            ))}
+        {error && (
+          <div className="text-center py-12 text-red-400">
+            {error}
           </div>
-        </section>
+        )}
+
+        {/* Files by Date */}
+        {!loading && !error && sortedDates.length === 0 && (
+          <div className="text-center py-12 text-zinc-500">
+            No deliverables yet
+          </div>
+        )}
+
+        {sortedDates.map(date => {
+          let dateLabel = date;
+          if (date === today) dateLabel = `📅 Today (${date})`;
+          else if (date === yesterday) dateLabel = `📅 Yesterday (${date})`;
+          else dateLabel = `📅 ${date}`;
+
+          return (
+            <section key={date} className="mb-8">
+              <h2 className="text-lg font-semibold mb-4 text-orange-400">
+                {dateLabel}
+                <span className="text-sm font-normal text-zinc-500 ml-2">
+                  ({byDate[date].length} files)
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {byDate[date].map(file => (
+                  <FileCard
+                    key={file.id}
+                    file={file}
+                    onCopyPath={handleCopyPath}
+                    showAgent={agentFilter === "all"}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-zinc-800 text-center text-sm text-zinc-600">
-          🎯 Maverick Marketing Dashboard • Updated: 2026-02-04
+          📦 Team Deliverables • Auto-refreshes every 30s
         </footer>
       </main>
     </div>
