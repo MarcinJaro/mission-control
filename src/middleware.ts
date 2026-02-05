@@ -16,7 +16,7 @@ const isProtectedRoute = createRouteMatcher([
 const isPublicRoute = createRouteMatcher([
   "/api/deliverables(.*)",  // Deliverables API - public for now
   "/sign-in(.*)",
-  "/sign-up(.*)",
+  // "/sign-up(.*)",  // DISABLED - only existing users can log in
 ]);
 
 // Fallback middleware when Clerk is not configured
