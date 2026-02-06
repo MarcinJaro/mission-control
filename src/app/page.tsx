@@ -263,7 +263,7 @@ function KanbanColumn({
   });
 
   return (
-    <div className="flex-1 min-w-[250px] max-w-[300px]">
+    <div className="flex-shrink-0 w-[280px] md:w-auto md:flex-1 md:min-w-[250px] md:max-w-[300px] snap-center">
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--border)]">
         <div className={cn("w-2.5 h-2.5 rounded-full", statusColors[status])} />
         <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] font-medium">
@@ -727,9 +727,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-deep)]">
-      {/* Header */}
-      <header className="bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4 animate-in">
-        <div className="flex items-center justify-between">
+      {/* Desktop Header - hidden on mobile (MobileNav handles it) */}
+      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4 animate-in">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-6">
             <h1 className="text-xl font-bold flex items-center gap-3 text-[var(--text-primary)]">
               <span className="text-2xl">⌘</span>
@@ -771,10 +771,15 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Mobile Stats Bar */}
+      <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-2">
+        <StatsBar />
+      </div>
+
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Activity Feed - Left Sidebar */}
-        <aside className="w-80 border-r border-[var(--border)] flex flex-col bg-[var(--bg-surface)] animate-in delay-1">
+        {/* Activity Feed - Left Sidebar (Desktop only) */}
+        <aside className="hidden lg:flex w-80 border-r border-[var(--border)] flex-col bg-[var(--bg-surface)] animate-in delay-1">
           <div className="p-4 border-b border-[var(--border)]">
             <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
               Activity Feed
@@ -792,9 +797,9 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* Kanban Board - Center */}
+        {/* Kanban Board - Center (full width on mobile) */}
         <main className="flex-1 overflow-x-auto animate-in delay-2">
-          <div className="p-6 grid-bg min-h-full">
+          <div className="p-3 md:p-6 grid-bg min-h-full">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCorners}
@@ -802,7 +807,8 @@ export default function Dashboard() {
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
             >
-              <div className="flex gap-4">
+              {/* Horizontal scroll container for mobile */}
+              <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory md:snap-none">
                 <KanbanColumn
                   title="Inbox"
                   status="inbox"
@@ -847,8 +853,8 @@ export default function Dashboard() {
           </div>
         </main>
 
-        {/* Agents - Right Sidebar */}
-        <aside className="w-72 border-l border-[var(--border)] flex flex-col bg-[var(--bg-surface)] animate-in delay-3">
+        {/* Agents - Right Sidebar (Desktop only) */}
+        <aside className="hidden xl:flex w-72 border-l border-[var(--border)] flex-col bg-[var(--bg-surface)] animate-in delay-3">
           <div className="p-4 border-b border-[var(--border)]">
             <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
               Agents

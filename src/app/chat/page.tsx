@@ -198,9 +198,9 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-950">
-      {/* Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
-        <div className="flex items-center justify-between">
+      {/* Desktop Header - hidden on mobile (MobileNav handles it) */}
+      <header className="hidden md:flex bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -224,6 +224,12 @@ export default function ChatPage() {
           <RouterStats />
         </div>
       </header>
+      
+      {/* Mobile subheader with online indicator */}
+      <div className="md:hidden bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center justify-between">
+        <OnlineIndicator agents={agents} />
+        <RouterStats />
+      </div>
 
       {/* Messages */}
       <main className="flex-1 overflow-y-auto p-6">
@@ -251,21 +257,38 @@ export default function ChatPage() {
       </main>
 
       {/* Input */}
-      <footer className="bg-zinc-900 border-t border-zinc-800 p-4">
-        <div className="max-w-4xl mx-auto flex gap-3">
-          {/* Send as selector */}
-          <select
-            value={sendAs}
-            onChange={(e) => setSendAs(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm min-w-[140px]"
-          >
-            <option value="marcin">👤 Marcin</option>
-            {agents?.map((agent) => (
-              <option key={agent._id} value={agent.sessionKey}>
-                {agent.emoji} {agent.name}
-              </option>
-            ))}
-          </select>
+      <footer className="bg-zinc-900 border-t border-zinc-800 p-3 md:p-4 safe-area-bottom">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-2 md:gap-3">
+          {/* Top row on mobile: sender + send button */}
+          <div className="flex gap-2 md:contents">
+            {/* Send as selector */}
+            <select
+              value={sendAs}
+              onChange={(e) => setSendAs(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 md:px-3 py-2 text-sm flex-1 md:flex-none md:min-w-[140px]"
+            >
+              <option value="marcin">👤 Marcin</option>
+              {agents?.map((agent) => (
+                <option key={agent._id} value={agent.sessionKey}>
+                  {agent.emoji} {agent.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Send button - visible on mobile top row */}
+            <button
+              onClick={handleSend}
+              disabled={!newMessage.trim()}
+              className={cn(
+                "md:hidden px-4 py-2 rounded-lg transition-colors font-medium",
+                newMessage.trim()
+                  ? "bg-emerald-600 hover:bg-emerald-500"
+                  : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              )}
+            >
+              Send
+            </button>
+          </div>
 
           {/* Message input */}
           <div className="flex-1 relative">
@@ -273,22 +296,22 @@ export default function ChatPage() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message... (use @name to mention, Enter to send)"
+              placeholder="Type a message... (@name to mention)"
               rows={1}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 pr-20 focus:outline-none focus:border-zinc-600 resize-none"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 md:px-4 py-2 pr-16 md:pr-20 focus:outline-none focus:border-zinc-600 resize-none text-sm md:text-base"
               style={{ minHeight: "44px", maxHeight: "120px" }}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] md:text-xs text-zinc-500">
               Enter ↵
             </div>
           </div>
 
-          {/* Send button */}
+          {/* Send button - desktop only */}
           <button
             onClick={handleSend}
             disabled={!newMessage.trim()}
             className={cn(
-              "px-6 py-2 rounded-lg transition-colors font-medium",
+              "hidden md:block px-6 py-2 rounded-lg transition-colors font-medium",
               newMessage.trim()
                 ? "bg-emerald-600 hover:bg-emerald-500"
                 : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
@@ -298,21 +321,21 @@ export default function ChatPage() {
           </button>
         </div>
 
-        {/* Mention hints */}
-        <div className="max-w-4xl mx-auto mt-2 text-xs text-zinc-600">
-          Quick mentions:{" "}
+        {/* Mention hints - horizontal scroll on mobile */}
+        <div className="max-w-4xl mx-auto mt-2 text-xs text-zinc-600 overflow-x-auto whitespace-nowrap scrollbar-hide">
+          <span className="hidden md:inline">Quick mentions: </span>
           {agents?.map((agent) => (
             <button
               key={agent._id}
               onClick={() => setNewMessage((m) => m + `@${agent.name} `)}
-              className="hover:text-zinc-400 transition-colors mx-1"
+              className="hover:text-zinc-400 transition-colors mx-1 inline-block"
             >
               @{agent.name}
             </button>
           ))}
           <button
             onClick={() => setNewMessage((m) => m + "@Marcin ")}
-            className="hover:text-zinc-400 transition-colors mx-1"
+            className="hover:text-zinc-400 transition-colors mx-1 inline-block"
           >
             @Marcin
           </button>

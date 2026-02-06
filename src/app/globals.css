@@ -321,3 +321,33 @@ body::after {
   background-size: 40px 40px;
   background-position: -1px -1px;
 }
+
+/* iOS Safe Area Support */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile layout adjustments */
+@media (max-width: 768px) {
+  /* Disable scan lines on mobile for performance */
+  body::before {
+    display: none;
+  }
+  
+  /* Reduce noise opacity */
+  body::after {
+    opacity: 0.01;
+  }
+}

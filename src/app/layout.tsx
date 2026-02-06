@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { MobileNav } from "@/components/MobileNav";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -31,7 +32,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <MobileNav />
+          {/* Add padding for mobile nav bars */}
+          <div className="md:pt-0 pt-14 pb-16 md:pb-0">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

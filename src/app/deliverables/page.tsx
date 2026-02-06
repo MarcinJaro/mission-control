@@ -166,9 +166,9 @@ export default function DeliverablesPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
-        <div className="flex items-center justify-between">
+      {/* Desktop Header - hidden on mobile */}
+      <header className="hidden md:flex bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4">
             <a href="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-80">
               <span>🎯</span>
@@ -190,7 +190,7 @@ export default function DeliverablesPage() {
             </a>
           </div>
           
-          {/* Filter */}
+          {/* Filter - Desktop */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-zinc-500">Agent:</span>
             <select
@@ -214,6 +214,28 @@ export default function DeliverablesPage() {
           </div>
         </div>
       </header>
+      
+      {/* Mobile Filter Bar */}
+      <div className="md:hidden bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center gap-2">
+        <select
+          value={agentFilter}
+          onChange={(e) => setAgentFilter(e.target.value)}
+          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="all">All ({data?.count || 0})</option>
+          {agentStats.map(s => (
+            <option key={s.agent} value={s.agent}>
+              {s.emoji} {s.name} ({s.count})
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={fetchDeliverables}
+          className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors"
+        >
+          🔄
+        </button>
+      </div>
 
       {/* Toast */}
       {copied && (
@@ -223,22 +245,22 @@ export default function DeliverablesPage() {
       )}
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto p-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <main className="max-w-7xl mx-auto p-4 md:p-6">
+        {/* Stats - horizontal scroll on mobile */}
+        <div className="flex md:grid md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           {agentStats.map(s => (
             <button
               key={s.agent}
               onClick={() => setAgentFilter(s.agent === agentFilter ? "all" : s.agent)}
-              className={`rounded-xl border p-4 transition-all ${
+              className={`flex-shrink-0 w-24 md:w-auto rounded-xl border p-3 md:p-4 transition-all ${
                 s.agent === agentFilter
                   ? "bg-orange-600/20 border-orange-500"
                   : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
               }`}
             >
-              <div className="text-2xl mb-1">{s.emoji}</div>
-              <div className="text-2xl font-bold text-orange-500">{s.count}</div>
-              <div className="text-xs text-zinc-500">{s.name}</div>
+              <div className="text-xl md:text-2xl mb-1">{s.emoji}</div>
+              <div className="text-xl md:text-2xl font-bold text-orange-500">{s.count}</div>
+              <div className="text-[10px] md:text-xs text-zinc-500 truncate">{s.name}</div>
             </button>
           ))}
         </div>
@@ -270,14 +292,14 @@ export default function DeliverablesPage() {
           else dateLabel = `📅 ${date}`;
 
           return (
-            <section key={date} className="mb-8">
-              <h2 className="text-lg font-semibold mb-4 text-orange-400">
+            <section key={date} className="mb-6 md:mb-8">
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-orange-400">
                 {dateLabel}
-                <span className="text-sm font-normal text-zinc-500 ml-2">
+                <span className="text-xs md:text-sm font-normal text-zinc-500 ml-2">
                   ({byDate[date].length} files)
                 </span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                 {byDate[date].map(file => (
                   <FileCard
                     key={file.id}
