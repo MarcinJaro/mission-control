@@ -119,6 +119,8 @@ export const create = mutation({
     
     // Notify assignees
     if (args.assigneeIds?.length) {
+      const assignees = await Promise.all(args.assigneeIds.map((aid) => ctx.db.get(aid)));
+      
       for (const assigneeId of args.assigneeIds) {
         await ctx.db.insert("notifications", {
           targetAgentId: assigneeId,
@@ -132,6 +134,19 @@ export const create = mutation({
           delivered: false,
           createdAt: now,
         });
+      }
+      
+      // Wake each assignee via webhook (instant notification)
+      for (const assignee of assignees) {
+        if (assignee && assignee.sessionKey) {
+          await ctx.scheduler.runAfter(0, internal.internal.wakeAgent, {
+            agentSessionKey: assignee.sessionKey,
+            agentName: assignee.name || "Agent",
+            taskTitle: args.title,
+            taskId: id,
+            assignerName: creator?.name,
+          });
+        }
       }
     }
     
@@ -187,6 +202,15 @@ export const updateStatus = mutation({
       targetType: "task",
       createdAt: now,
     });
+    
+    // Notify Marcin when task is done or blocked
+    if (args.status === "done" || args.status === "blocked") {
+      await ctx.scheduler.runAfter(0, internal.internal.notifyMarcin, {
+        type: args.status === "done" ? "completed" : "blocked",
+        taskTitle: task.title,
+        agentName: agent?.name || "Agent",
+      });
+    }
   },
 });
 
@@ -263,6 +287,19 @@ export const assign = mutation({
       await ctx.scheduler.runAfter(0, internal.telegram.broadcastToTeam, {
         message: telegramMsg,
       });
+      
+      // Wake each new assignee via webhook (instant notification)
+      for (const assignee of newAssigneeAgents) {
+        if (assignee && assignee.sessionKey) {
+          await ctx.scheduler.runAfter(0, internal.internal.wakeAgent, {
+            agentSessionKey: assignee.sessionKey,
+            agentName: assignee.name || "Agent",
+            taskTitle: task.title,
+            taskId: args.id,
+            assignerName: agent?.name,
+          });
+        }
+      }
     }
   },
 });

@@ -13,6 +13,7 @@ import type * as agents from "../agents.js";
 import type * as chat from "../chat.js";
 import type * as documents from "../documents.js";
 import type * as http from "../http.js";
+import type * as internal_ from "../internal.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as projects from "../projects.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   documents: typeof documents;
   http: typeof http;
+  internal: typeof internal_;
   messages: typeof messages;
   notifications: typeof notifications;
   projects: typeof projects;

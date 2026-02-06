@@ -745,6 +745,13 @@ export default function Dashboard() {
               <span>📦</span>
               <span>Deliverables</span>
             </a>
+            <a 
+              href="/metrics" 
+              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
+            >
+              <span>📊</span>
+              <span>Metrics</span>
+            </a>
             <StatsBar />
           </div>
           <button
