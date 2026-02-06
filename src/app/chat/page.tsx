@@ -41,9 +41,22 @@ const agentColors: Record<string, string> = {
   human: "bg-red-500",
 };
 
+// Agent avatars
+const agentAvatars: Record<string, string> = {
+  main: "/avatars/gilfoyl.jpg",
+  bestia: "/avatars/bestia.jpg",
+  marketing: "/avatars/maverick.jpg",
+  ksiegowy: "/avatars/feliks.jpg",
+  assistant: "/avatars/zosia.jpg",
+  investor: "/avatars/gordon.jpg",
+  marcin: "/avatars/marcin.jpg",
+  human: "/avatars/marcin.jpg",
+};
+
 // Message bubble component - clean design
 function MessageBubble({ message, isOwn }: { message: any; isOwn: boolean }) {
   const bgColor = agentColors[message.authorId] || "bg-zinc-600";
+  const avatarUrl = agentAvatars[message.authorId];
   const initial = message.authorName?.charAt(0)?.toUpperCase() || "?";
 
   const highlightMentions = (content: string) => {
@@ -61,15 +74,23 @@ function MessageBubble({ message, isOwn }: { message: any; isOwn: boolean }) {
 
   return (
     <div className={cn("flex gap-3 mb-4", isOwn && "flex-row-reverse")}>
-      <div
-        className={cn(
-          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white",
-          bgColor
-        )}
-        title={message.authorName}
-      >
-        {initial}
-      </div>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={message.authorName}
+          className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+        />
+      ) : (
+        <div
+          className={cn(
+            "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white",
+            bgColor
+          )}
+          title={message.authorName}
+        >
+          {initial}
+        </div>
+      )}
 
       <div className={cn("max-w-[75%] md:max-w-[70%]", isOwn && "text-right")}>
         <div className="flex items-center gap-2 mb-1">
@@ -89,25 +110,36 @@ function MessageBubble({ message, isOwn }: { message: any; isOwn: boolean }) {
   );
 }
 
-// Online indicator - minimal design
+// Online indicator - with avatars
 function OnlineIndicator({ agents }: { agents: any[] | undefined }) {
   const onlineAgents = agents?.filter((a) => a.status === "active" || a.status === "idle") || [];
 
   return (
     <div className="flex items-center gap-2">
       <div className="flex -space-x-1.5">
-        {onlineAgents.slice(0, 4).map((agent) => (
-          <div
-            key={agent._id}
-            className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[var(--bg-deep)] text-white",
-              agentColors[agent.sessionKey] || "bg-zinc-600"
-            )}
-            title={agent.name}
-          >
-            {agent.name?.charAt(0)}
-          </div>
-        ))}
+        {onlineAgents.slice(0, 4).map((agent) => {
+          const avatarUrl = agentAvatars[agent.sessionKey];
+          return avatarUrl ? (
+            <img
+              key={agent._id}
+              src={avatarUrl}
+              alt={agent.name}
+              className="w-6 h-6 rounded-full object-cover border-2 border-[var(--bg-deep)]"
+              title={agent.name}
+            />
+          ) : (
+            <div
+              key={agent._id}
+              className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[var(--bg-deep)] text-white",
+                agentColors[agent.sessionKey] || "bg-zinc-600"
+              )}
+              title={agent.name}
+            >
+              {agent.name?.charAt(0)}
+            </div>
+          );
+        })}
       </div>
       <span className="text-xs text-[var(--text-muted)] font-mono">
         {onlineAgents.length} online
