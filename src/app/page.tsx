@@ -82,28 +82,33 @@ function Avatar({
 // Agent Card Component
 function AgentCard({ agent }: { agent: any }) {
   return (
-    <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800 hover:border-zinc-700 transition-colors">
+    <div className="card-glow p-4">
       <div className="flex items-center gap-3">
-        <Avatar agent={agent} size="lg" />
+        <div className={cn(
+          "relative",
+          agent.status === "active" && "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-deep)] rounded-full"
+        )}>
+          <Avatar agent={agent} size="lg" />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold truncate">{agent.name}</h3>
+            <h3 className="font-semibold truncate text-[var(--text-primary)]">{agent.name}</h3>
             <div
               className={cn(
                 "w-2 h-2 rounded-full",
-                agent.status === "active" && "bg-emerald-500 animate-pulse",
-                agent.status === "idle" && "bg-zinc-500",
-                agent.status === "blocked" && "bg-amber-500",
-                agent.status === "offline" && "bg-zinc-700"
+                agent.status === "active" && "status-active",
+                agent.status === "idle" && "status-idle",
+                agent.status === "blocked" && "status-blocked",
+                agent.status === "offline" && "status-offline"
               )}
             />
           </div>
-          <p className="text-sm text-zinc-400 truncate">{agent.role}</p>
+          <p className="text-sm text-[var(--text-secondary)] truncate font-mono text-xs">{agent.role}</p>
         </div>
       </div>
       {agent.lastSeenAt && (
-        <p className="text-xs text-zinc-500 mt-2">
-          Last seen: {timeAgo(agent.lastSeenAt)}
+        <p className="text-xs text-[var(--text-muted)] mt-3 font-mono">
+          ↳ {timeAgo(agent.lastSeenAt)}
         </p>
       )}
     </div>
@@ -113,32 +118,32 @@ function AgentCard({ agent }: { agent: any }) {
 // Activity Item Component
 function ActivityItem({ activity }: { activity: any }) {
   return (
-    <div className="activity-item flex items-start gap-3 py-3 border-b border-zinc-800 last:border-0">
+    <div className="activity-item flex items-start gap-3 py-3 border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-hover)] transition-colors px-2 -mx-2 rounded">
       <Avatar agent={activity.agent || { emoji: "📋" }} size="sm" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-300">{activity.message}</p>
-        <p className="text-xs text-zinc-500 mt-1">{timeAgo(activity.createdAt)}</p>
+        <p className="text-sm text-[var(--text-primary)]">{activity.message}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1 font-mono">{timeAgo(activity.createdAt)}</p>
       </div>
     </div>
   );
 }
 
-// Priority colors
+// Priority colors - refined accents
 const priorityColors: Record<string, string> = {
-  low: "border-l-zinc-600",
-  medium: "border-l-blue-500",
-  high: "border-l-amber-500",
-  urgent: "border-l-red-500",
+  low: "border-l-[var(--text-muted)]",
+  medium: "border-l-indigo-400",
+  high: "border-l-amber-400",
+  urgent: "border-l-red-400",
 };
 
-// Status colors
+// Status colors - with glow
 const statusColors: Record<string, string> = {
-  inbox: "bg-zinc-500",
-  assigned: "bg-blue-500",
-  in_progress: "bg-amber-500",
-  review: "bg-purple-500",
-  done: "bg-emerald-500",
-  blocked: "bg-red-500",
+  inbox: "bg-[var(--text-muted)]",
+  assigned: "bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]",
+  in_progress: "bg-[var(--accent)] shadow-[0_0_8px_var(--accent-dim)]",
+  review: "bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.5)]",
+  done: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]",
+  blocked: "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]",
 };
 
 // Task Card Component (for drag overlay)
@@ -203,19 +208,21 @@ function SortableTaskCard({
       {...listeners}
       onClick={onClick}
       className={cn(
-        "bg-zinc-900 rounded-lg p-3 border border-zinc-800 border-l-4 cursor-grab active:cursor-grabbing",
-        "hover:border-zinc-700 transition-colors touch-none group relative",
-        priorityColors[task.priority] || "border-l-zinc-600",
-        isDragging && "shadow-xl ring-2 ring-emerald-500/50"
+        "bg-[var(--bg-surface)] rounded-xl p-3 border border-[var(--border)] border-l-4 cursor-grab active:cursor-grabbing",
+        "hover:border-[var(--border-glow)] hover:bg-[var(--bg-elevated)] transition-all duration-200 touch-none group relative",
+        priorityColors[task.priority] || "border-l-[var(--text-muted)]",
+        isDragging && "shadow-2xl ring-2 ring-[var(--accent)] scale-105"
       )}
     >
       <button
         onClick={handleDelete}
         onPointerDown={(e) => e.stopPropagation()}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-zinc-800"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all text-[var(--text-muted)] hover:text-red-400 p-1.5 rounded-lg hover:bg-[var(--bg-hover)]"
         title="Delete task"
       >
-        🗑️
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
       </button>
       <TaskCardContent task={task} />
     </div>
@@ -227,9 +234,9 @@ function TaskCard({ task }: { task: any }) {
   return (
     <div
       className={cn(
-        "bg-zinc-900 rounded-lg p-3 border border-zinc-800 border-l-4",
-        "shadow-2xl ring-2 ring-emerald-500",
-        priorityColors[task.priority] || "border-l-zinc-600"
+        "bg-[var(--bg-elevated)] rounded-xl p-3 border border-[var(--accent)] border-l-4",
+        "shadow-2xl shadow-[var(--accent-dim)] ring-2 ring-[var(--accent)] scale-105",
+        priorityColors[task.priority] || "border-l-[var(--text-muted)]"
       )}
     >
       <TaskCardContent task={task} />
@@ -257,12 +264,12 @@ function KanbanColumn({
 
   return (
     <div className="flex-1 min-w-[250px] max-w-[300px]">
-      <div className="flex items-center gap-2 mb-4">
-        <div className={cn("w-3 h-3 rounded-full", statusColors[status])} />
-        <h3 className="font-semibold text-sm uppercase tracking-wide text-zinc-400">
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--border)]">
+        <div className={cn("w-2.5 h-2.5 rounded-full", statusColors[status])} />
+        <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] font-medium">
           {title}
         </h3>
-        <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-[var(--accent)] bg-[var(--accent-dim)] px-2.5 py-0.5 rounded-full font-mono font-semibold">
           {tasks.length}
         </span>
       </div>
@@ -273,8 +280,8 @@ function KanbanColumn({
         <div 
           ref={setNodeRef}
           className={cn(
-            "space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 min-h-[100px] rounded-lg p-2 -m-2 transition-colors",
-            isOver && "bg-zinc-800/50 ring-2 ring-emerald-500/30"
+            "space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 min-h-[100px] rounded-xl p-2 -m-2 transition-all duration-200",
+            isOver && "bg-[var(--accent-dim)] ring-2 ring-[var(--accent)]"
           )}
         >
           {tasks.map((task) => (
@@ -287,10 +294,10 @@ function KanbanColumn({
           ))}
           {tasks.length === 0 && (
             <div className={cn(
-              "text-zinc-600 text-sm text-center py-8 border-2 border-dashed rounded-lg transition-colors",
-              isOver ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-zinc-800"
+              "text-[var(--text-muted)] text-sm text-center py-10 border-2 border-dashed rounded-xl transition-all duration-200 font-mono",
+              isOver ? "border-[var(--accent)] bg-[var(--accent-dim)] text-[var(--accent)]" : "border-[var(--border)]"
             )}>
-              {isOver ? "Drop here ✓" : "No tasks"}
+              {isOver ? "↳ drop here" : "∅ empty"}
             </div>
           )}
         </div>
@@ -612,18 +619,15 @@ function StatsBar() {
   if (!stats) return null;
 
   return (
-    <div className="flex items-center gap-6 text-sm">
+    <div className="flex items-center gap-6 text-sm font-mono">
       <div className="flex items-center gap-2">
-        <span className="text-zinc-500">Today:</span>
-        <span className="font-medium">{stats.activitiesToday} activities</span>
+        <span className="text-[var(--text-muted)]">today:</span>
+        <span className="text-[var(--text-primary)]">{stats.activitiesToday}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-zinc-500">Tasks:</span>
-        <span className="text-emerald-500">{stats.tasksCompleted} done</span>
-        <span className="text-zinc-600">·</span>
-        <span className="text-amber-500">{stats.tasksInProgress} active</span>
-        <span className="text-zinc-600">·</span>
-        <span className="text-zinc-400">{stats.tasksInbox} inbox</span>
+      <div className="flex items-center gap-3">
+        <span className="text-emerald-400">✓{stats.tasksCompleted}</span>
+        <span className="text-[var(--accent)]">◉{stats.tasksInProgress}</span>
+        <span className="text-[var(--text-muted)]">○{stats.tasksInbox}</span>
       </div>
     </div>
   );
@@ -722,43 +726,46 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-deep)]">
       {/* Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+      <header className="bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4 animate-in">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <span>🎯</span>
-              <span>Mission Control</span>
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-bold flex items-center gap-3 text-[var(--text-primary)]">
+              <span className="text-2xl">⌘</span>
+              <span className="font-mono tracking-tight">MISSION<span className="text-[var(--accent)]">_</span>CTRL</span>
             </h1>
-            <a 
-              href="/chat" 
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
-            >
-              <span>💬</span>
-              <span>Chat</span>
-            </a>
-            <a 
-              href="/deliverables" 
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
-            >
-              <span>📦</span>
-              <span>Deliverables</span>
-            </a>
-            <a 
-              href="/metrics" 
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
-            >
-              <span>📊</span>
-              <span>Metrics</span>
-            </a>
+            <nav className="flex items-center gap-1">
+              <a 
+                href="/chat" 
+                className="btn-ghost text-sm flex items-center gap-2"
+              >
+                <span>◈</span>
+                <span>Chat</span>
+              </a>
+              <a 
+                href="/deliverables" 
+                className="btn-ghost text-sm flex items-center gap-2"
+              >
+                <span>◇</span>
+                <span>Deliverables</span>
+              </a>
+              <a 
+                href="/metrics" 
+                className="btn-ghost text-sm flex items-center gap-2"
+              >
+                <span>◆</span>
+                <span>Metrics</span>
+              </a>
+            </nav>
+            <div className="h-6 w-px bg-[var(--border)]" />
             <StatsBar />
           </div>
           <button
             onClick={() => setShowCreateTask(true)}
-            className="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
-            <span>+</span>
+            <span className="font-mono">+</span>
             <span>New Task</span>
           </button>
         </div>
@@ -767,25 +774,27 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Activity Feed - Left Sidebar */}
-        <aside className="w-80 border-r border-zinc-800 flex flex-col">
-          <div className="p-4 border-b border-zinc-800">
-            <h2 className="font-semibold text-zinc-400 uppercase text-sm tracking-wide">
+        <aside className="w-80 border-r border-[var(--border)] flex flex-col bg-[var(--bg-surface)] animate-in delay-1">
+          <div className="p-4 border-b border-[var(--border)]">
+            <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
               Activity Feed
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto px-4">
-            {activities?.map((activity) => (
-              <ActivityItem key={activity._id} activity={activity} />
+          <div className="flex-1 overflow-y-auto px-4 py-2">
+            {activities?.map((activity, i) => (
+              <div key={activity._id} style={{ animationDelay: `${i * 0.05}s` }}>
+                <ActivityItem activity={activity} />
+              </div>
             ))}
             {(!activities || activities.length === 0) && (
-              <p className="text-zinc-600 text-center py-8">No activity yet</p>
+              <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no activity</p>
             )}
           </div>
         </aside>
 
         {/* Kanban Board - Center */}
-        <main className="flex-1 overflow-x-auto">
-          <div className="p-6">
+        <main className="flex-1 overflow-x-auto animate-in delay-2">
+          <div className="p-6 grid-bg min-h-full">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCorners}
@@ -839,18 +848,20 @@ export default function Dashboard() {
         </main>
 
         {/* Agents - Right Sidebar */}
-        <aside className="w-72 border-l border-zinc-800 flex flex-col">
-          <div className="p-4 border-b border-zinc-800">
-            <h2 className="font-semibold text-zinc-400 uppercase text-sm tracking-wide">
-              Team
+        <aside className="w-72 border-l border-[var(--border)] flex flex-col bg-[var(--bg-surface)] animate-in delay-3">
+          <div className="p-4 border-b border-[var(--border)]">
+            <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
+              Agents
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {agents?.map((agent) => (
-              <AgentCard key={agent._id} agent={agent} />
+            {agents?.map((agent, i) => (
+              <div key={agent._id} className="animate-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+                <AgentCard agent={agent} />
+              </div>
             ))}
             {(!agents || agents.length === 0) && (
-              <p className="text-zinc-600 text-center py-8">No agents found</p>
+              <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no agents</p>
             )}
           </div>
         </aside>
