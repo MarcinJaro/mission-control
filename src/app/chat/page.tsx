@@ -1,6 +1,5 @@
 "use client";
 
-// Force dynamic rendering (skip static generation)
 export const dynamic = 'force-dynamic';
 
 import { useQuery, useMutation } from "convex/react";
@@ -8,16 +7,15 @@ import { api } from "../../../convex/_generated/api";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
-// Utility functions
 function timeAgo(timestamp: number) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return "now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${days}d`;
 }
 
 function formatTime(timestamp: number) {
@@ -31,41 +29,28 @@ function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// Agent colors for avatars
+// Agent colors - matching dashboard theme
 const agentColors: Record<string, string> = {
-  main: "bg-emerald-600",
-  bestia: "bg-amber-600",
-  marketing: "bg-purple-600",
-  ksiegowy: "bg-blue-600",
-  assistant: "bg-pink-600",
-  investor: "bg-cyan-600",
-  marcin: "bg-red-600",
-  human: "bg-red-600",
+  main: "bg-[var(--accent)]",
+  bestia: "bg-amber-500",
+  marketing: "bg-violet-500",
+  ksiegowy: "bg-blue-500",
+  assistant: "bg-pink-500",
+  investor: "bg-cyan-500",
+  marcin: "bg-red-500",
+  human: "bg-red-500",
 };
 
-// Agent emojis
-const agentEmojis: Record<string, string> = {
-  main: "🤖",
-  bestia: "🦁",
-  marketing: "🎯",
-  ksiegowy: "📊",
-  assistant: "✨",
-  investor: "🐺",
-  marcin: "👤",
-  human: "👤",
-};
-
-// Message bubble component
+// Message bubble component - clean design
 function MessageBubble({ message, isOwn }: { message: any; isOwn: boolean }) {
-  const bgColor = agentColors[message.authorId] || "bg-zinc-700";
-  const emoji = agentEmojis[message.authorId] || "👤";
+  const bgColor = agentColors[message.authorId] || "bg-zinc-600";
+  const initial = message.authorName?.charAt(0)?.toUpperCase() || "?";
 
-  // Highlight @mentions in content
   const highlightMentions = (content: string) => {
     return content.split(/(@\w+)/g).map((part, i) => {
       if (part.startsWith("@")) {
         return (
-          <span key={i} className="text-emerald-400 font-semibold">
+          <span key={i} className="text-[var(--accent)] font-semibold">
             {part}
           </span>
         );
@@ -76,87 +61,74 @@ function MessageBubble({ message, isOwn }: { message: any; isOwn: boolean }) {
 
   return (
     <div className={cn("flex gap-3 mb-4", isOwn && "flex-row-reverse")}>
-      {/* Avatar */}
       <div
         className={cn(
-          "w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0",
+          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white",
           bgColor
         )}
         title={message.authorName}
       >
-        {emoji}
+        {initial}
       </div>
 
-      {/* Message content */}
-      <div className={cn("max-w-[70%]", isOwn && "text-right")}>
+      <div className={cn("max-w-[75%] md:max-w-[70%]", isOwn && "text-right")}>
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-semibold text-sm">{message.authorName}</span>
-          <span className="text-xs text-zinc-500">{formatTime(message.createdAt)}</span>
-          {message.editedAt && (
-            <span className="text-xs text-zinc-600">(edited)</span>
-          )}
+          <span className="font-semibold text-sm text-[var(--text-primary)]">{message.authorName}</span>
+          <span className="text-xs text-[var(--text-muted)] font-mono">{formatTime(message.createdAt)}</span>
         </div>
         <div
           className={cn(
-            "rounded-2xl px-4 py-2 inline-block text-left",
-            isOwn ? "bg-emerald-600" : "bg-zinc-800"
+            "rounded-2xl px-4 py-2.5 inline-block text-left text-sm",
+            isOwn ? "bg-[var(--accent)] text-[var(--bg-deep)]" : "bg-[var(--bg-elevated)] border border-[var(--border)]"
           )}
         >
           <p className="whitespace-pre-wrap">{highlightMentions(message.content)}</p>
         </div>
-        {message.mentions?.length > 0 && (
-          <div className="text-xs text-zinc-500 mt-1">
-            mentions: {message.mentions.join(", ")}
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-// Online indicator
+// Online indicator - minimal design
 function OnlineIndicator({ agents }: { agents: any[] | undefined }) {
   const onlineAgents = agents?.filter((a) => a.status === "active" || a.status === "idle") || [];
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex -space-x-2">
-        {onlineAgents.slice(0, 5).map((agent) => (
+      <div className="flex -space-x-1.5">
+        {onlineAgents.slice(0, 4).map((agent) => (
           <div
             key={agent._id}
             className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 border-zinc-900",
-              agentColors[agent.sessionKey] || "bg-zinc-700"
+              "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[var(--bg-deep)] text-white",
+              agentColors[agent.sessionKey] || "bg-zinc-600"
             )}
             title={agent.name}
           >
-            {agent.emoji}
+            {agent.name?.charAt(0)}
           </div>
         ))}
       </div>
-      <span className="text-sm text-zinc-500">
+      <span className="text-xs text-[var(--text-muted)] font-mono">
         {onlineAgents.length} online
       </span>
     </div>
   );
 }
 
-// Router stats display
+// Router stats - minimal
 function RouterStats() {
   const stats = useQuery(api.chat.routerStats, {});
-
   if (!stats) return null;
 
   return (
-    <div className="flex items-center gap-4 text-xs text-zinc-500">
-      <span>Router: ${stats.totalCost.toFixed(4)} today</span>
+    <div className="hidden md:flex items-center gap-4 text-xs text-[var(--text-muted)] font-mono">
+      <span>${stats.totalCost.toFixed(4)}</span>
       <span>{stats.totalMessages} routed</span>
-      <span>{stats.triggeredCount} triggered</span>
     </div>
   );
 }
 
-// Main Chat Page
 export default function ChatPage() {
   const messages = useQuery(api.chat.list, { limit: 100 });
   const agents = useQuery(api.agents.list);
@@ -166,7 +138,6 @@ export default function ChatPage() {
   const [sendAs, setSendAs] = useState("marcin");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -197,50 +168,39 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-950">
-      {/* Desktop Header - hidden on mobile (MobileNav handles it) */}
-      <header className="hidden md:flex bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-deep)]">
+      {/* Desktop Header */}
+      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4">
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-zinc-500 hover:text-zinc-300 transition-colors"
-            >
-              ← Back
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors font-mono text-sm">
+              ← back
             </Link>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <span>💬</span>
-              <span>MC Chat</span>
+            <div className="h-4 w-px bg-[var(--border)]" />
+            <h1 className="font-mono text-sm uppercase tracking-widest text-[var(--text-muted)]">
+              Team Chat
             </h1>
-            <Link
-              href="/deliverables"
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
-            >
-              <span>📦</span>
-              <span>Deliverables</span>
-            </Link>
             <OnlineIndicator agents={agents} />
           </div>
           <RouterStats />
         </div>
       </header>
       
-      {/* Mobile subheader with online indicator */}
-      <div className="md:hidden bg-zinc-900 border-b border-zinc-800 px-4 py-2 flex items-center justify-between">
+      {/* Mobile subheader */}
+      <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-2 flex items-center justify-between">
         <OnlineIndicator agents={agents} />
-        <RouterStats />
       </div>
 
       {/* Messages */}
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-3xl mx-auto">
           {messages?.length === 0 && (
-            <div className="text-center text-zinc-500 py-12">
-              <p className="text-4xl mb-4">💬</p>
-              <p>No messages yet. Start the conversation!</p>
-              <p className="text-sm mt-2">
-                Use @mentions to ping specific agents
-              </p>
+            <div className="text-center text-[var(--text-muted)] py-16">
+              <div className="w-12 h-12 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+                <span className="text-[var(--accent)]">◈</span>
+              </div>
+              <p className="font-mono text-sm">No messages yet</p>
+              <p className="text-xs mt-1">Use @mentions to ping agents</p>
             </div>
           )}
 
@@ -257,40 +217,36 @@ export default function ChatPage() {
       </main>
 
       {/* Input */}
-      <footer className="bg-zinc-900 border-t border-zinc-800 p-3 md:p-4 safe-area-bottom">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-2 md:gap-3">
-          {/* Top row on mobile: sender + send button */}
+      <footer className="bg-[var(--bg-surface)] border-t border-[var(--border)] p-3 md:p-4 safe-area-bottom">
+        <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-2 md:gap-3">
           <div className="flex gap-2 md:contents">
-            {/* Send as selector */}
             <select
               value={sendAs}
               onChange={(e) => setSendAs(e.target.value)}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 md:px-3 py-2 text-sm flex-1 md:flex-none md:min-w-[140px]"
+              className="terminal-input flex-1 md:flex-none md:min-w-[140px] px-3 py-2 text-sm"
             >
-              <option value="marcin">👤 Marcin</option>
+              <option value="marcin">Marcin</option>
               {agents?.map((agent) => (
                 <option key={agent._id} value={agent.sessionKey}>
-                  {agent.emoji} {agent.name}
+                  {agent.name}
                 </option>
               ))}
             </select>
 
-            {/* Send button - visible on mobile top row */}
             <button
               onClick={handleSend}
               disabled={!newMessage.trim()}
               className={cn(
-                "md:hidden px-4 py-2 rounded-lg transition-colors font-medium",
+                "md:hidden px-4 py-2 rounded-lg transition-all font-medium text-sm",
                 newMessage.trim()
-                  ? "bg-emerald-600 hover:bg-emerald-500"
-                  : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                  ? "btn-primary"
+                  : "bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed"
               )}
             >
               Send
             </button>
           </div>
 
-          {/* Message input */}
           <div className="flex-1 relative">
             <textarea
               value={newMessage}
@@ -298,47 +254,39 @@ export default function ChatPage() {
               onKeyDown={handleKeyDown}
               placeholder="Type a message... (@name to mention)"
               rows={1}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 md:px-4 py-2 pr-16 md:pr-20 focus:outline-none focus:border-zinc-600 resize-none text-sm md:text-base"
+              className="terminal-input w-full px-4 py-2.5 pr-16 text-sm resize-none"
               style={{ minHeight: "44px", maxHeight: "120px" }}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] md:text-xs text-zinc-500">
-              Enter ↵
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-muted)] font-mono">
+              enter ↵
             </div>
           </div>
 
-          {/* Send button - desktop only */}
           <button
             onClick={handleSend}
             disabled={!newMessage.trim()}
             className={cn(
-              "hidden md:block px-6 py-2 rounded-lg transition-colors font-medium",
+              "hidden md:block px-6 py-2.5 rounded-lg transition-all font-medium",
               newMessage.trim()
-                ? "bg-emerald-600 hover:bg-emerald-500"
-                : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                ? "btn-primary"
+                : "bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed"
             )}
           >
             Send
           </button>
         </div>
 
-        {/* Mention hints - horizontal scroll on mobile */}
-        <div className="max-w-4xl mx-auto mt-2 text-xs text-zinc-600 overflow-x-auto whitespace-nowrap scrollbar-hide">
-          <span className="hidden md:inline">Quick mentions: </span>
+        {/* Mention hints */}
+        <div className="max-w-3xl mx-auto mt-2 text-[10px] text-[var(--text-muted)] overflow-x-auto whitespace-nowrap scrollbar-hide font-mono">
           {agents?.map((agent) => (
             <button
               key={agent._id}
               onClick={() => setNewMessage((m) => m + `@${agent.name} `)}
-              className="hover:text-zinc-400 transition-colors mx-1 inline-block"
+              className="hover:text-[var(--accent)] transition-colors mx-1.5"
             >
               @{agent.name}
             </button>
           ))}
-          <button
-            onClick={() => setNewMessage((m) => m + "@Marcin ")}
-            className="hover:text-zinc-400 transition-colors mx-1 inline-block"
-          >
-            @Marcin
-          </button>
         </div>
       </footer>
     </div>

@@ -1,9 +1,9 @@
 "use client";
 
-// Force dynamic rendering (skip static generation)
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface DeliverableFile {
   id: string;
@@ -25,84 +25,136 @@ interface ApiResponse {
   sources: { agent: string; name: string; emoji: string }[];
 }
 
-const EXT_ICONS: Record<string, string> = {
-  ".md": "📝",
-  ".txt": "📄",
-  ".json": "📊",
-  ".csv": "📊",
-  ".pdf": "📕",
-  ".html": "🌐",
-  ".png": "🖼️",
-  ".jpg": "🖼️",
-  ".jpeg": "🖼️",
-  ".gif": "🖼️",
-  ".webp": "🖼️",
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+// Extension icons - minimal text
+const EXT_LABELS: Record<string, string> = {
+  ".md": "MD",
+  ".txt": "TXT",
+  ".json": "JSON",
+  ".csv": "CSV",
+  ".pdf": "PDF",
+  ".html": "HTML",
+  ".png": "IMG",
+  ".jpg": "IMG",
+  ".jpeg": "IMG",
+  ".gif": "GIF",
+  ".webp": "IMG",
 };
 
+// Agent initials
+const AGENT_INITIALS: Record<string, string> = {
+  main: "G",
+  bestia: "B",
+  marketing: "M",
+  ksiegowy: "F",
+  assistant: "Z",
+  investor: "G",
+};
+
+// File Card - clean design
 function FileCard({ 
   file, 
-  onCopyPath,
   showAgent = true,
 }: { 
   file: DeliverableFile; 
-  onCopyPath: (path: string) => void;
   showAgent?: boolean;
 }) {
-  const icon = EXT_ICONS[file.ext] || "📄";
-  const isNew = (Date.now() - new Date(file.mtime).getTime()) < 3600000; // Last hour
+  const extLabel = EXT_LABELS[file.ext] || "FILE";
+  const isNew = (Date.now() - new Date(file.mtime).getTime()) < 3600000;
   const date = new Date(file.mtime);
   const timeStr = date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
   const dateStr = date.toISOString().split("T")[0];
 
   return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 hover:border-zinc-700 transition-all hover:shadow-lg group">
+    <div className="card-glow p-4 group">
       <div className="flex items-start justify-between mb-3">
-        <span className="text-2xl">{icon}</span>
+        <div className="w-10 h-10 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center font-mono text-xs text-[var(--text-muted)]">
+          {extLabel}
+        </div>
         <div className="flex items-center gap-2">
           {isNew && (
-            <span className="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full text-xs font-medium">
-              NEW
+            <span className="bg-[var(--accent-dim)] text-[var(--accent)] px-2 py-0.5 rounded text-[10px] font-mono uppercase">
+              new
             </span>
           )}
           {showAgent && (
-            <span className="text-xs bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">
-              {file.agentEmoji} {file.agentName}
+            <span className="text-[10px] bg-[var(--bg-elevated)] px-2 py-0.5 rounded text-[var(--text-muted)] font-mono">
+              {file.agentName}
             </span>
           )}
         </div>
       </div>
       
-      <h3 className="font-semibold text-white mb-1 truncate" title={file.name}>
+      <h3 className="font-medium text-sm text-[var(--text-primary)] mb-1 truncate group-hover:text-[var(--accent)] transition-colors" title={file.name}>
         {file.name}
       </h3>
       
-      <div className="flex items-center gap-2 mb-3 text-xs text-zinc-500">
+      <div className="flex items-center gap-2 mb-4 text-[10px] text-[var(--text-muted)] font-mono">
         <span>{dateStr}</span>
-        <span>•</span>
+        <span className="text-[var(--border)]">•</span>
         <span>{timeStr}</span>
-        <span>•</span>
+        <span className="text-[var(--border)]">•</span>
         <span>{file.sizeFormatted}</span>
       </div>
       
-      <div className="flex items-center gap-2 pt-3 border-t border-zinc-800">
+      <div className="flex items-center gap-2 pt-3 border-t border-[var(--border)]">
         <a
           href={file.downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="flex-1 btn-ghost text-xs py-2 text-center"
         >
-          <span>👁️</span>
-          <span>View</span>
+          View
         </a>
         <a
           href={`${file.downloadUrl}?download=true`}
-          className="bg-orange-600 hover:bg-orange-500 text-sm px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="btn-primary text-xs py-2 px-4"
         >
-          <span>⬇️</span>
-          <span>Download</span>
+          Download
         </a>
       </div>
     </div>
+  );
+}
+
+// Agent stat button
+function AgentStatButton({
+  agent,
+  name,
+  count,
+  isActive,
+  onClick,
+}: {
+  agent: string;
+  name: string;
+  count: number;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex-shrink-0 w-20 md:w-auto rounded-xl border p-3 md:p-4 transition-all text-left",
+        isActive
+          ? "bg-[var(--accent-dim)] border-[var(--accent)]"
+          : "bg-[var(--bg-surface)] border-[var(--border)] hover:border-[var(--border-glow)]"
+      )}
+    >
+      <div className="w-7 h-7 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center font-mono text-xs text-[var(--text-muted)] mb-2">
+        {AGENT_INITIALS[agent] || name.charAt(0)}
+      </div>
+      <div className={cn(
+        "text-xl font-bold font-mono",
+        isActive ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+      )}>
+        {count}
+      </div>
+      <div className="text-[10px] text-[var(--text-muted)] truncate font-mono">{name}</div>
+    </button>
   );
 }
 
@@ -111,35 +163,26 @@ export default function DeliverablesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agentFilter, setAgentFilter] = useState<string>("all");
-  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDeliverables();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchDeliverables, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchDeliverables = async () => {
     try {
-      // Fetch from local maverick server via tunnel
       const res = await fetch("https://maverick.creativerebels.pl/api/files");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setData(json);
       setError(null);
     } catch (err) {
-      setError("Failed to load deliverables - is maverick server running?");
+      setError("Server offline");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCopyPath = (path: string) => {
-    navigator.clipboard.writeText(path);
-    setCopied(path);
-    setTimeout(() => setCopied(null), 2000);
   };
 
   const filteredFiles = data?.files.filter(
@@ -158,153 +201,135 @@ export default function DeliverablesPage() {
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
-  // Stats per agent
   const agentStats = data?.sources.map(s => ({
     ...s,
     count: data.files.filter(f => f.agent === s.agent).length,
   })) || [];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* Desktop Header - hidden on mobile */}
-      <header className="hidden md:flex bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+    <div className="min-h-screen bg-[var(--bg-deep)] text-[var(--text-primary)]">
+      {/* Desktop Header */}
+      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4">
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <a href="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-80">
-              <span>🎯</span>
-              <span>Mission Control</span>
-            </a>
-            <a 
-              href="/chat" 
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
-            >
-              <span>💬</span>
-              <span>Chat</span>
-            </a>
-            <a 
-              href="/deliverables" 
-              className="bg-orange-600 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2"
-            >
-              <span>📦</span>
-              <span>Deliverables</span>
-            </a>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors font-mono text-sm">
+              ← back
+            </Link>
+            <div className="h-4 w-px bg-[var(--border)]" />
+            <h1 className="font-mono text-sm uppercase tracking-widest text-[var(--text-muted)]">
+              Deliverables
+            </h1>
+            <span className="text-[var(--accent)] bg-[var(--accent-dim)] px-2 py-0.5 rounded text-xs font-mono">
+              {data?.count || 0}
+            </span>
           </div>
           
-          {/* Filter - Desktop */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-500">Agent:</span>
+          <div className="flex items-center gap-3">
             <select
               value={agentFilter}
               onChange={(e) => setAgentFilter(e.target.value)}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm"
+              className="terminal-input px-3 py-1.5 text-sm"
             >
-              <option value="all">All Agents ({data?.count || 0})</option>
+              <option value="all">All agents</option>
               {agentStats.map(s => (
                 <option key={s.agent} value={s.agent}>
-                  {s.emoji} {s.name} ({s.count})
+                  {s.name} ({s.count})
                 </option>
               ))}
             </select>
             <button
               onClick={fetchDeliverables}
-              className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-sm transition-colors"
+              className="btn-ghost px-3 py-1.5 text-sm"
             >
-              🔄
+              Refresh
             </button>
           </div>
         </div>
       </header>
       
       {/* Mobile Filter Bar */}
-      <div className="md:hidden bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center gap-2">
+      <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-3 flex items-center gap-2">
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm"
+          className="terminal-input flex-1 px-3 py-2 text-sm"
         >
           <option value="all">All ({data?.count || 0})</option>
           {agentStats.map(s => (
             <option key={s.agent} value={s.agent}>
-              {s.emoji} {s.name} ({s.count})
+              {s.name} ({s.count})
             </option>
           ))}
         </select>
         <button
           onClick={fetchDeliverables}
-          className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors"
+          className="btn-ghost px-3 py-2 text-sm"
         >
-          🔄
+          ↻
         </button>
       </div>
 
-      {/* Toast */}
-      {copied && (
-        <div className="fixed top-20 right-4 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse">
-          ✓ Path copied!
-        </div>
-      )}
-
-      {/* Content */}
       <main className="max-w-7xl mx-auto p-4 md:p-6">
-        {/* Stats - horizontal scroll on mobile */}
+        {/* Agent Stats - horizontal scroll on mobile */}
         <div className="flex md:grid md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           {agentStats.map(s => (
-            <button
+            <AgentStatButton
               key={s.agent}
+              agent={s.agent}
+              name={s.name}
+              count={s.count}
+              isActive={s.agent === agentFilter}
               onClick={() => setAgentFilter(s.agent === agentFilter ? "all" : s.agent)}
-              className={`flex-shrink-0 w-24 md:w-auto rounded-xl border p-3 md:p-4 transition-all ${
-                s.agent === agentFilter
-                  ? "bg-orange-600/20 border-orange-500"
-                  : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
-              }`}
-            >
-              <div className="text-xl md:text-2xl mb-1">{s.emoji}</div>
-              <div className="text-xl md:text-2xl font-bold text-orange-500">{s.count}</div>
-              <div className="text-[10px] md:text-xs text-zinc-500 truncate">{s.name}</div>
-            </button>
+            />
           ))}
         </div>
 
-        {/* Loading/Error */}
+        {/* Loading */}
         {loading && (
-          <div className="text-center py-12 text-zinc-500">
-            Loading deliverables...
+          <div className="text-center py-16">
+            <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-[var(--text-muted)] font-mono text-sm">Loading...</p>
           </div>
         )}
 
-        {error && (
-          <div className="text-center py-12 text-red-400">
-            {error}
+        {/* Error */}
+        {error && !loading && (
+          <div className="text-center py-16">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-400">!</span>
+            </div>
+            <p className="text-[var(--text-muted)] font-mono text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && sortedDates.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+              <span className="text-[var(--text-muted)]">◇</span>
+            </div>
+            <p className="text-[var(--text-muted)] font-mono text-sm">No deliverables</p>
           </div>
         )}
 
         {/* Files by Date */}
-        {!loading && !error && sortedDates.length === 0 && (
-          <div className="text-center py-12 text-zinc-500">
-            No deliverables yet
-          </div>
-        )}
-
         {sortedDates.map(date => {
           let dateLabel = date;
-          if (date === today) dateLabel = `📅 Today (${date})`;
-          else if (date === yesterday) dateLabel = `📅 Yesterday (${date})`;
-          else dateLabel = `📅 ${date}`;
+          if (date === today) dateLabel = `Today`;
+          else if (date === yesterday) dateLabel = `Yesterday`;
 
           return (
             <section key={date} className="mb-6 md:mb-8">
-              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-orange-400">
-                {dateLabel}
-                <span className="text-xs md:text-sm font-normal text-zinc-500 ml-2">
-                  ({byDate[date].length} files)
-                </span>
+              <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] mb-4 flex items-center gap-3">
+                <span>{dateLabel}</span>
+                <span className="text-[var(--accent)]">{byDate[date].length}</span>
+                <span className="flex-1 h-px bg-[var(--border)]" />
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                 {byDate[date].map(file => (
                   <FileCard
                     key={file.id}
                     file={file}
-                    onCopyPath={handleCopyPath}
                     showAgent={agentFilter === "all"}
                   />
                 ))}
@@ -314,8 +339,10 @@ export default function DeliverablesPage() {
         })}
 
         {/* Footer */}
-        <footer className="mt-12 pt-6 border-t border-zinc-800 text-center text-sm text-zinc-600">
-          📦 Team Deliverables • Auto-refreshes every 30s
+        <footer className="mt-12 pt-6 border-t border-[var(--border)] text-center">
+          <p className="text-[10px] text-[var(--text-muted)] font-mono">
+            Auto-refresh: 30s
+          </p>
         </footer>
       </main>
     </div>
