@@ -11,8 +11,8 @@ function cn(...classes: (string | boolean | undefined)[]) {
 const NAV_ITEMS = [
   { label: "Tasks", href: "/", icon: "◉" },
   { label: "Chat", href: "/chat", icon: "◈" },
-  { label: "Schedule", href: "/schedule", icon: "◇" },
-  { label: "Metrics", href: "/metrics", icon: "◆" },
+  { label: "Schedule", href: "/schedule", icon: "⚡" },
+  { label: "Activity", href: "/activity", icon: "◇" },
 ];
 
 export function MobileNav() {
@@ -116,20 +116,20 @@ export function DesktopHeader({
                   : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
               )}
             >
-              <span className="font-mono">◇</span>
+              <span className="font-mono">⚡</span>
               <span>Schedule</span>
             </Link>
             <Link 
-              href="/deliverables" 
+              href="/activity" 
               className={cn(
                 "px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors",
-                pathname === "/deliverables" 
+                pathname === "/activity" 
                   ? "bg-zinc-800 text-emerald-400" 
                   : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
               )}
             >
-              <span className="font-mono">◈</span>
-              <span>Files</span>
+              <span className="font-mono">◇</span>
+              <span>Activity</span>
             </Link>
             <Link 
               href="/metrics" 

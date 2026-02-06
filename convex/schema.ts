@@ -165,6 +165,22 @@ export default defineSchema({
     .index("by_message", ["messageId"])
     .index("by_createdAt", ["createdAt"]),
 
+  // Activity Logs - lightweight audit trail for all agent actions
+  activityLogs: defineTable({
+    type: v.string(), // task_created, task_updated, message_sent, cron_executed, etc.
+    agentId: v.optional(v.string()), // sessionKey (flexible, not strict ID)
+    agentName: v.optional(v.string()),
+    title: v.string(),
+    description: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+    taskId: v.optional(v.id("tasks")),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_agent", ["agentId"])
+    .index("by_type", ["type"])
+    .index("by_task", ["taskId"]),
+
   // Notifications - @mentions and alerts
   notifications: defineTable({
     targetAgentId: v.id("agents"),
