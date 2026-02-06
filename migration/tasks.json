@@ -1,0 +1,308 @@
+[
+  {
+    "_creationTime": 1770360733064.96,
+    "_id": "jx72d4n2g2wfw0e4besk9cvwnn80ncn3",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1770360733067,
+    "createdBy": "j972abs7wmb1karncsrh9ghwy180aqdt",
+    "description": "Implementacja systemu Programmatic SEO dla BuzzRank.\n\n## Dokumenty:\n- **Playbook:** https://maverick.creativerebels.pl/buzzrank-pseo-playbook.md\n- **Keywords & Prompts:** https://maverick.creativerebels.pl/buzzrank-pseo-keywords-batch1.md\n- **Implementation Plan:** https://maverick.creativerebels.pl/buzzrank-pseo-implementation-plan.md\n- **Review Notes:** https://maverick.creativerebels.pl/buzzrank-pseo-review-notes.md\n\n## Scope:\n- 10 glossary pages (/glossary/[slug])\n- 5 comparison pages (/compare/[slug])\n- 3 persona pages (/for/[slug])\n- 3 integration pages (/integrations/[slug])\n\n## Tech Requirements:\n- Dynamic routes for each content type\n- Page templates with schema markup (FAQ, HowTo, Product)\n- Markdown content storage\n- Auto-sitemap update\n- Core Web Vitals <2.5s LCP\n\n## Questions for you:\n1. Content storage: Markdown vs DB?\n2. Can we extend existing blog or need new setup?\n3. BuzzRank webhook available for auto-publish?\n\nEst. 3-4 days for infrastructure, then we generate content via BuzzRank.",
+    "priority": "high",
+    "project": null,
+    "status": "inbox",
+    "title": "🚀 BuzzRank pSEO Implementation - 21 pages Batch 1",
+    "updatedAt": 1770360733067
+  },
+  {
+    "_creationTime": 1770010469161.1926,
+    "_id": "jx7cc1rzbcxn4ge9wmpgk871yd80da47",
+    "assigneeIds": [
+      "j97fmhq4dmsndv2cjx15ckyhjx80avfa"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.4194,
+        "_id": "j97fmhq4dmsndv2cjx15ckyhjx80avfa",
+        "avatarUrl": "/avatars/bestia.jpg",
+        "emoji": "🦁",
+        "lastSeenAt": 1769972237058,
+        "name": "Bestia",
+        "role": "Health coach",
+        "sessionKey": "bestia",
+        "status": "idle"
+      }
+    ],
+    "createdAt": 1770010469163,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "priority": "medium",
+    "project": null,
+    "status": "assigned",
+    "title": " cvfnghmj,",
+    "updatedAt": 1770010469163
+  },
+  {
+    "_creationTime": 1770002046540.4004,
+    "_id": "jx7cs1vrst6gmxen3n6ym6htjx80dx78",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1770002046542,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Found during tech audit 2026-02-02:\n\n1. **Missing admin auth** in `/api/admin/stripe-transactions` - no role verification!\n2. **Missing permission check** in `/api/deletePersona` - unauthorized delete risk\n3. **Jest broken** - tests dont work\n\nSee full report: `reports/buzzgen-tech-audit-2026-02-02.md`",
+    "priority": "urgent",
+    "project": null,
+    "status": "assigned",
+    "title": "🔴 BuzzGen Critical Security Fixes",
+    "updatedAt": 1770106675028
+  },
+  {
+    "_creationTime": 1769983416694.1667,
+    "_id": "jx7a8zdj9fq97d3bvr35sj345x80b4rt",
+    "assigneeIds": [
+      "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+      "j97fmhq4dmsndv2cjx15ckyhjx80avfa"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.4192,
+        "_id": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+        "avatarUrl": "/avatars/gilfoyl.jpg",
+        "emoji": "🤖",
+        "lastSeenAt": 1769972237058,
+        "name": "Gilfoyl",
+        "role": "Architekt, główny",
+        "sessionKey": "main",
+        "status": "idle"
+      },
+      {
+        "_creationTime": 1769972237056.4194,
+        "_id": "j97fmhq4dmsndv2cjx15ckyhjx80avfa",
+        "avatarUrl": "/avatars/bestia.jpg",
+        "emoji": "🦁",
+        "lastSeenAt": 1769972237058,
+        "name": "Bestia",
+        "role": "Health coach",
+        "sessionKey": "bestia",
+        "status": "idle"
+      }
+    ],
+    "createdAt": 1769983416696,
+    "createdBy": "j972abs7wmb1karncsrh9ghwy180aqdt",
+    "description": "Na stronie https://buzzrank.io/en są polskie teksty w angielskiej wersji.\n\n**Do naprawy:**\n1. \"Zasilane danymi, którym ufasz\" → \"Powered by data you trust\"\n2. \"Centrum dowodzenia\" → \"Command Center\"\n\n**Lokalizacja:** Sekcja z integracjami (WordPress, GSC, DataForSEO, Semrush, Ahrefs)\n\nQuick fix przed launchem!",
+    "priority": "urgent",
+    "project": null,
+    "status": "assigned",
+    "title": "🐛 BuzzRank /en - Fix mixed language (PL w EN)",
+    "updatedAt": 1770010436133
+  },
+  {
+    "_creationTime": 1769982717613.0388,
+    "_id": "jx7e4q098gcfzj6xbgqdk5stx980b7v2",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769982717615,
+    "createdBy": "j972abs7wmb1karncsrh9ghwy180aqdt",
+    "description": "Przejrzyj architekturę BuzzRank przed launchem. Sprawdź:\n- Code quality\n- Performance bottlenecks\n- Security concerns\n- Scalability\n\nPotrzebujemy tego przed public launch!",
+    "priority": "high",
+    "project": null,
+    "status": "in_progress",
+    "title": "🔧 BuzzRank Technical Audit",
+    "updatedAt": 1770010456035
+  },
+  {
+    "_creationTime": 1769982698007.5566,
+    "_id": "jx77qa3qjmgbhv94djhcy2gccs80basp",
+    "assigneeIds": [
+      "j97dnbv2v3mwfjsa0mbpce049h80b9v6"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.4192,
+        "_id": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+        "avatarUrl": "/avatars/gilfoyl.jpg",
+        "emoji": "🤖",
+        "lastSeenAt": 1769972237058,
+        "name": "Gilfoyl",
+        "role": "Architekt, główny",
+        "sessionKey": "main",
+        "status": "idle"
+      }
+    ],
+    "createdAt": 1769982698010,
+    "createdBy": "j972abs7wmb1karncsrh9ghwy180aqdt",
+    "description": "Przejrzyj architekturę BuzzRank, sprawdź code quality, zasugeruj improvements.\n\n**Do sprawdzenia:**\n- Architektura backend/frontend\n- Database schema\n- API performance\n- Security basics\n- Deployment setup\n\nPriorytet: przed launchem!",
+    "priority": "high",
+    "project": null,
+    "status": "assigned",
+    "title": "🔧 BuzzRank Technical Audit",
+    "updatedAt": 1769982698010
+  },
+  {
+    "_creationTime": 1769980032303.8281,
+    "_id": "jx75c2jx18zr9m039fe28dcqkx80akag",
+    "assigneeIds": [
+      "j972abs7wmb1karncsrh9ghwy180aqdt"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.42,
+        "_id": "j972abs7wmb1karncsrh9ghwy180aqdt",
+        "avatarUrl": "/avatars/maverick.jpg",
+        "emoji": "🎯",
+        "lastSeenAt": 1769972237058,
+        "name": "Maverick",
+        "role": "Marketing black ops",
+        "sessionKey": "marketing",
+        "status": "idle"
+      }
+    ],
+    "createdAt": 1769980032306,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "BuzzRank jest gotowy do launchu. Pierwszy płacący klient już jest!\n\n**Do zrobienia (marketing):**\n1. Landing page copy review\n2. Pricing page optimization\n3. Onboarding email sequence\n4. Launch announcement (Twitter, LinkedIn, Product Hunt?)\n5. Case study z pierwszego klienta\n6. Content marketing plan (blog posts about SEO automation)\n7. Competitor positioning\n\n**Assets do przygotowania:**\n- Screenshots/demo video\n- Testimonial od pierwszego klienta\n- Comparison table vs competitors\n\nPriorytet: LAUNCH ASAP 🔥",
+    "priority": "urgent",
+    "project": null,
+    "status": "in_progress",
+    "title": "🚀 BuzzRank Launch - Marketing Tasks",
+    "updatedAt": 1769980530724
+  },
+  {
+    "_creationTime": 1769972792493.969,
+    "_id": "jx7eh73dd12sxastcdd3wc8eb180bva8",
+    "assigneeIds": [
+      "j97dnbv2v3mwfjsa0mbpce049h80b9v6"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.4192,
+        "_id": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+        "avatarUrl": "/avatars/gilfoyl.jpg",
+        "emoji": "🤖",
+        "lastSeenAt": 1769972237058,
+        "name": "Gilfoyl",
+        "role": "Architekt, główny",
+        "sessionKey": "main",
+        "status": "idle"
+      }
+    ],
+    "createdAt": 1769972792494,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Agregujący dashboard:\n- BuzzGen MRR\n- Nature-Solution revenue\n- buzzrank metrics\n- Koszty infra\n- Single pane of glass",
+    "priority": "medium",
+    "project": null,
+    "status": "assigned",
+    "title": "Dashboard metryki wszystkich firm",
+    "updatedAt": 1769972959815
+  },
+  {
+    "_creationTime": 1769972786151.614,
+    "_id": "jx70z6rs2b99cmcg2a1d1yf8r980aqr3",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972786151,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Integracja po treningu:\n- iOS Shortcut triggeruje HealthVitals app\n- App pushuje do iCloud\n- Bestia automatycznie odbiera i komentuje",
+    "priority": "medium",
+    "project": null,
+    "status": "assigned",
+    "title": "HealthVitals → Bestia auto-push",
+    "updatedAt": 1770010457749
+  },
+  {
+    "_creationTime": 1769972779389.1694,
+    "_id": "jx7fy4td7r8jze5rj6z4ysd5r180bvxm",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972779389,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Zaprojektować architekturę buzzrank.io:\n- Content automation flow\n- SEO module\n- Backlink exchange logic\n- Tech stack decisions",
+    "priority": "high",
+    "project": null,
+    "status": "inbox",
+    "title": "buzzrank.io - architektura",
+    "updatedAt": 1769972779389
+  },
+  {
+    "_creationTime": 1769972773282.352,
+    "_id": "jx705q5h6dhdzcr9c66zyerk9980azk4",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972773282,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Implementacja pobierania emaili dla Feliksa:\n- Service account setup\n- Gmail API integration\n- Automatyczny parsing faktur",
+    "priority": "high",
+    "project": null,
+    "status": "inbox",
+    "title": "CRFin - email fetch implementation",
+    "updatedAt": 1769972773282
+  },
+  {
+    "_creationTime": 1769972767017.9739,
+    "_id": "jx7c5d1pvtrr3wrg89sct2rrvh80ayb3",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972767020,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Kompleksowy przegląd BuzzGen.io:\n- Architektura obecna\n- Pain points\n- Roadmap na Q1\n- Priorytety funkcji",
+    "priority": "urgent",
+    "project": null,
+    "status": "inbox",
+    "title": "BuzzGen - pełny audyt + roadmap Q1",
+    "updatedAt": 1769972767020
+  },
+  {
+    "_creationTime": 1769972438101.7134,
+    "_id": "jx756tek3p6qvmjacw0kwm666980bym5",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972438101,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Przegląd obecnego stanu:\n- API endpoints\n- Database schema\n- Frontend components\n- Performance bottlenecks",
+    "priority": "urgent",
+    "project": null,
+    "status": "inbox",
+    "title": "BuzzGen - audyt architektury Q1",
+    "updatedAt": 1769972438101
+  },
+  {
+    "_creationTime": 1769972424835.4585,
+    "_id": "jx7651jk4tg6v4198hqsycwvg180a0fh",
+    "assigneeIds": [],
+    "assignees": [],
+    "createdAt": 1769972424835,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Dodać do agentów możliwość:\n- Automatycznego heartbeat do MC\n- Tworzenia tasków przez natural language\n- Pollowania notyfikacji w heartbeat",
+    "priority": "medium",
+    "project": null,
+    "status": "inbox",
+    "title": "Integracja OpenClaw → Mission Control",
+    "updatedAt": 1769972424835
+  },
+  {
+    "_creationTime": 1769972417938.5796,
+    "_id": "jx74mzqd24cdjf4x5md1tw89nn80ane2",
+    "assigneeIds": [
+      "j97fmhq4dmsndv2cjx15ckyhjx80avfa"
+    ],
+    "assignees": [
+      {
+        "_creationTime": 1769972237056.4194,
+        "_id": "j97fmhq4dmsndv2cjx15ckyhjx80avfa",
+        "avatarUrl": "/avatars/bestia.jpg",
+        "emoji": "🦁",
+        "lastSeenAt": 1769972237058,
+        "name": "Bestia",
+        "role": "Health coach",
+        "sessionKey": "bestia",
+        "status": "idle"
+      }
+    ],
+    "completedAt": 1769980284579,
+    "createdAt": 1769972417940,
+    "createdBy": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "description": "Przetestować pełny flow:\n1. Tworzenie tasków\n2. Przypisywanie do agentów\n3. Komentarze z @mentions\n4. Status updates\n5. Activity feed",
+    "priority": "high",
+    "project": null,
+    "status": "done",
+    "title": "🚀 Mission Control MVP - test flow",
+    "updatedAt": 1769980284579
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "_creationTime": 1769972237056.4192,
+    "_id": "j97dnbv2v3mwfjsa0mbpce049h80b9v6",
+    "avatarUrl": "/avatars/gilfoyl.jpg",
+    "emoji": "🤖",
+    "lastSeenAt": 1769972237058,
+    "name": "Gilfoyl",
+    "role": "Architekt, główny",
+    "sessionKey": "main",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769972237056.4194,
+    "_id": "j97fmhq4dmsndv2cjx15ckyhjx80avfa",
+    "avatarUrl": "/avatars/bestia.jpg",
+    "emoji": "🦁",
+    "lastSeenAt": 1769972237058,
+    "name": "Bestia",
+    "role": "Health coach",
+    "sessionKey": "bestia",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769972237056.4197,
+    "_id": "j972jh01wb6mqxm9xbm296x6n580bz47",
+    "avatarUrl": "/avatars/feliks.jpg",
+    "emoji": "📊",
+    "lastSeenAt": 1769972237058,
+    "name": "Feliks",
+    "role": "CFO, księgowość",
+    "sessionKey": "ksiegowy",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769972237056.42,
+    "_id": "j972abs7wmb1karncsrh9ghwy180aqdt",
+    "avatarUrl": "/avatars/maverick.jpg",
+    "emoji": "🎯",
+    "lastSeenAt": 1769972237058,
+    "name": "Maverick",
+    "role": "Marketing black ops",
+    "sessionKey": "marketing",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769972237056.4202,
+    "_id": "j978tm7rken93snjrjpddhp0b980b7hv",
+    "avatarUrl": "/avatars/gordon.jpg",
+    "emoji": "🐺",
+    "lastSeenAt": 1769972237058,
+    "name": "Gordon",
+    "role": "Inwestycje",
+    "sessionKey": "investor",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769972237056.4204,
+    "_id": "j978eva15n6vj555gnehahxrbh80ba3d",
+    "avatarUrl": "/avatars/zosia.jpg",
+    "emoji": "✨",
+    "lastSeenAt": 1769972237058,
+    "name": "Zosia",
+    "role": "Asystentka osobista",
+    "sessionKey": "assistant",
+    "status": "idle"
+  },
+  {
+    "_creationTime": 1769973359169.441,
+    "_id": "j9786e1007xvrq4vnn9henn1dn80aeqf",
+    "avatarUrl": "/avatars/marcin.jpg",
+    "emoji": "👨‍💻",
+    "lastSeenAt": 1769973359171,
+    "name": "Marcin",
+    "role": "Founder / Product Owner",
+    "sessionKey": "human",
+    "status": "idle"
+  }
+]

@@ -166,9 +166,11 @@ function TaskCardContent({ task }: { task: any }) {
 function SortableTaskCard({
   task,
   onClick,
+  onDelete,
 }: {
   task: any;
   onClick: () => void;
+  onDelete: () => void;
 }) {
   const {
     attributes,
@@ -185,6 +187,14 @@ function SortableTaskCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (confirm(`Delete "${task.title}"?`)) {
+      onDelete();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -194,11 +204,19 @@ function SortableTaskCard({
       onClick={onClick}
       className={cn(
         "bg-zinc-900 rounded-lg p-3 border border-zinc-800 border-l-4 cursor-grab active:cursor-grabbing",
-        "hover:border-zinc-700 transition-colors touch-none",
+        "hover:border-zinc-700 transition-colors touch-none group relative",
         priorityColors[task.priority] || "border-l-zinc-600",
         isDragging && "shadow-xl ring-2 ring-emerald-500/50"
       )}
     >
+      <button
+        onClick={handleDelete}
+        onPointerDown={(e) => e.stopPropagation()}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-zinc-800"
+        title="Delete task"
+      >
+        🗑️
+      </button>
       <TaskCardContent task={task} />
     </div>
   );
@@ -225,11 +243,13 @@ function KanbanColumn({
   tasks,
   status,
   onTaskClick,
+  onTaskDelete,
 }: {
   title: string;
   tasks: any[];
   status: string;
   onTaskClick: (task: any) => void;
+  onTaskDelete: (taskId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
@@ -261,7 +281,8 @@ function KanbanColumn({
             <SortableTaskCard 
               key={task._id} 
               task={task} 
-              onClick={() => onTaskClick(task)} 
+              onClick={() => onTaskClick(task)}
+              onDelete={() => onTaskDelete(task._id)}
             />
           ))}
           {tasks.length === 0 && (
@@ -614,10 +635,15 @@ export default function Dashboard() {
   const tasksByStatus = useQuery(api.tasks.byStatus);
   const activities = useQuery(api.activities.feed, { limit: 30 });
   const updateStatus = useMutation(api.tasks.updateStatus);
+  const deleteTask = useMutation(api.tasks.deleteTask);
   
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [activeTask, setActiveTask] = useState<any>(null);
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask({ id: taskId as Id<"tasks"> });
+  };
 
   // DnD sensors
   const sensors = useSensors(
@@ -766,30 +792,35 @@ export default function Dashboard() {
                   status="inbox"
                   tasks={tasksByStatus?.inbox || []}
                   onTaskClick={setSelectedTask}
+                  onTaskDelete={handleDeleteTask}
                 />
                 <KanbanColumn
                   title="Assigned"
                   status="assigned"
                   tasks={tasksByStatus?.assigned || []}
                   onTaskClick={setSelectedTask}
+                  onTaskDelete={handleDeleteTask}
                 />
                 <KanbanColumn
                   title="In Progress"
                   status="in_progress"
                   tasks={tasksByStatus?.in_progress || []}
                   onTaskClick={setSelectedTask}
+                  onTaskDelete={handleDeleteTask}
                 />
                 <KanbanColumn
                   title="Review"
                   status="review"
                   tasks={tasksByStatus?.review || []}
                   onTaskClick={setSelectedTask}
+                  onTaskDelete={handleDeleteTask}
                 />
                 <KanbanColumn
                   title="Done"
                   status="done"
                   tasks={tasksByStatus?.done || []}
                   onTaskClick={setSelectedTask}
+                  onTaskDelete={handleDeleteTask}
                 />
               </div>
               
