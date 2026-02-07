@@ -37,11 +37,12 @@ export const list = query({
         .take(args.limit || 50);
     }
     
-    // Enrich with creator info
+    // Enrich with creator info and file URLs
     return await Promise.all(
       docs.map(async (doc) => {
         const createdBy = await ctx.db.get(doc.createdBy);
-        return { ...doc, createdByAgent: createdBy };
+        const fileUrl = doc.storageId ? await ctx.storage.getUrl(doc.storageId) : null;
+        return { ...doc, createdByAgent: createdBy, fileUrl };
       })
     );
   },
@@ -57,8 +58,9 @@ export const get = query({
     const createdBy = await ctx.db.get(doc.createdBy);
     const task = doc.taskId ? await ctx.db.get(doc.taskId) : null;
     const project = doc.projectId ? await ctx.db.get(doc.projectId) : null;
+    const fileUrl = doc.storageId ? await ctx.storage.getUrl(doc.storageId) : null;
     
-    return { ...doc, createdByAgent: createdBy, task, project };
+    return { ...doc, createdByAgent: createdBy, task, project, fileUrl };
   },
 });
 
@@ -150,5 +152,78 @@ export const update = mutation({
       targetType: "document",
       createdAt: now,
     });
+  },
+});
+
+// Generate upload URL for file storage
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Create a file-based document (after uploading to storage)
+export const createFile = mutation({
+  args: {
+    title: v.string(),
+    type: v.union(
+      v.literal("deliverable"),
+      v.literal("research"),
+      v.literal("protocol"),
+      v.literal("note"),
+      v.literal("spec"),
+      v.literal("other")
+    ),
+    storageId: v.id("_storage"),
+    mimeType: v.string(),
+    fileName: v.string(),
+    fileSize: v.optional(v.number()),
+    taskId: v.optional(v.id("tasks")),
+    projectId: v.optional(v.id("projects")),
+    agentSessionKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db
+      .query("agents")
+      .withIndex("by_sessionKey", (q) => q.eq("sessionKey", args.agentSessionKey))
+      .first();
+
+    if (!agent) throw new Error("Agent not found");
+
+    const now = Date.now();
+    const id = await ctx.db.insert("documents", {
+      title: args.title,
+      type: args.type,
+      storageId: args.storageId,
+      mimeType: args.mimeType,
+      fileName: args.fileName,
+      fileSize: args.fileSize,
+      taskId: args.taskId,
+      projectId: args.projectId,
+      createdBy: agent._id,
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+    });
+
+    // Log activity
+    await ctx.db.insert("activities", {
+      type: "document_created",
+      agentId: agent._id,
+      message: `📎 ${agent.name} uploaded file: ${args.title}`,
+      targetId: id,
+      targetType: "document",
+      createdAt: now,
+    });
+
+    return id;
+  },
+});
+
+// Get file URL from storage
+export const getFileUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
   },
 });

@@ -105,7 +105,7 @@ export default defineSchema({
   // Documents - deliverables, research, protocols
   documents: defineTable({
     title: v.string(),
-    content: v.string(), // Markdown
+    content: v.optional(v.string()), // Markdown (for text documents)
     type: v.union(
       v.literal("deliverable"),
       v.literal("research"),
@@ -114,6 +114,11 @@ export default defineSchema({
       v.literal("spec"),
       v.literal("other")
     ),
+    // File storage (for binary files: images, PDFs, etc.)
+    storageId: v.optional(v.id("_storage")),
+    mimeType: v.optional(v.string()), // e.g. "image/png", "application/pdf"
+    fileName: v.optional(v.string()), // original filename
+    fileSize: v.optional(v.number()), // bytes
     taskId: v.optional(v.id("tasks")),
     projectId: v.optional(v.id("projects")),
     createdBy: v.id("agents"),

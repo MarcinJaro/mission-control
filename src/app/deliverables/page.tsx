@@ -153,6 +153,17 @@ function renderInline(text: string): (string | React.ReactElement)[] {
   return parts.length ? parts : [text];
 }
 
+function isImageMime(mime?: string | null): boolean {
+  return !!mime && mime.startsWith("image/");
+}
+
+function formatFileSize(bytes?: number | null): string {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
 // Document viewer modal
 function DocumentViewer({ docId, onClose }: { docId: string; onClose: () => void }) {
   const doc = useQuery(api.documents.get, { id: docId as Id<"documents"> });
@@ -164,6 +175,10 @@ function DocumentViewer({ docId, onClose }: { docId: string; onClose: () => void
       </div>
     );
   }
+
+  const hasFile = !!doc.fileUrl;
+  const isImage = isImageMime(doc.mimeType);
+  const isPdf = doc.mimeType === "application/pdf";
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -181,17 +196,63 @@ function DocumentViewer({ docId, onClose }: { docId: string; onClose: () => void
               )}
               <span>v{doc.version}</span>
               <span>{timeAgo(doc.createdAt)}</span>
+              {doc.fileName && <span className="font-mono">{doc.fileName}</span>}
+              {doc.fileSize && <span>{formatFileSize(doc.fileSize)}</span>}
               {doc.task && (
                 <span className="bg-zinc-800 px-2 py-0.5 rounded">📋 {doc.task.title}</span>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-2xl leading-none">×</button>
+          <div className="flex items-center gap-2">
+            {hasFile && (
+              <a
+                href={doc.fileUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Download
+              </a>
+            )}
+            <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-2xl leading-none">×</button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <MarkdownContent content={doc.content} />
+          {/* Image */}
+          {hasFile && isImage && (
+            <div className="flex items-center justify-center">
+              <img src={doc.fileUrl!} alt={doc.title} className="max-w-full max-h-[70vh] rounded-lg border border-zinc-800" />
+            </div>
+          )}
+
+          {/* PDF */}
+          {hasFile && isPdf && (
+            <iframe src={doc.fileUrl!} className="w-full h-[70vh] rounded-lg border border-zinc-800" />
+          )}
+
+          {/* Other file - download prompt */}
+          {hasFile && !isImage && !isPdf && (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center mx-auto mb-4 text-2xl">
+                📎
+              </div>
+              <p className="text-zinc-300 mb-2">{doc.fileName || doc.title}</p>
+              <p className="text-zinc-500 text-sm mb-4">{doc.mimeType} • {formatFileSize(doc.fileSize)}</p>
+              <a
+                href={doc.fileUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-lg transition-colors"
+              >
+                Download File
+              </a>
+            </div>
+          )}
+
+          {/* Markdown content */}
+          {doc.content && <MarkdownContent content={doc.content} />}
         </div>
       </div>
     </div>
@@ -201,43 +262,60 @@ function DocumentViewer({ docId, onClose }: { docId: string; onClose: () => void
 // Document card
 function DocCard({ doc, onClick }: { doc: any; onClick: () => void }) {
   const isNew = (Date.now() - doc.createdAt) < 3600000;
+  const isImage = isImageMime(doc.mimeType);
+  const hasFile = !!doc.fileUrl;
 
   return (
     <div
       onClick={onClick}
-      className="card-glow p-4 group cursor-pointer hover:border-[var(--border-glow)] transition-all"
+      className="card-glow group cursor-pointer hover:border-[var(--border-glow)] transition-all overflow-hidden"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-lg">
-          {TYPE_ICONS[doc.type] || "📄"}
+      {/* Image thumbnail */}
+      {hasFile && isImage && (
+        <div className="h-32 bg-zinc-800 overflow-hidden">
+          <img src={doc.fileUrl} alt={doc.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         </div>
-        <div className="flex items-center gap-2">
-          {isNew && (
-            <span className="bg-[var(--accent-dim)] text-[var(--accent)] px-2 py-0.5 rounded text-[10px] font-mono uppercase">
-              new
+      )}
+
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="w-10 h-10 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-lg">
+            {hasFile && isImage ? "🖼️" : TYPE_ICONS[doc.type] || "📄"}
+          </div>
+          <div className="flex items-center gap-2">
+            {isNew && (
+              <span className="bg-[var(--accent-dim)] text-[var(--accent)] px-2 py-0.5 rounded text-[10px] font-mono uppercase">
+                new
+              </span>
+            )}
+            <span className={cn("text-[10px] uppercase font-mono", TYPE_COLORS[doc.type] || "text-zinc-500")}>
+              {doc.mimeType ? doc.mimeType.split("/")[1]?.toUpperCase() || doc.type : doc.type}
             </span>
-          )}
-          <span className={cn("text-[10px] uppercase font-mono", TYPE_COLORS[doc.type] || "text-zinc-500")}>
-            {doc.type}
-          </span>
+          </div>
         </div>
+
+        <h3 className="font-medium text-sm text-[var(--text-primary)] mb-1 truncate group-hover:text-[var(--accent)] transition-colors">
+          {doc.title}
+        </h3>
+
+        <div className="flex items-center gap-2 mb-2 text-[10px] text-[var(--text-muted)] font-mono">
+          {doc.createdByAgent && <span>{doc.createdByAgent.emoji} {doc.createdByAgent.name}</span>}
+          <span className="text-[var(--border)]">•</span>
+          <span>{timeAgo(doc.createdAt)}</span>
+          {doc.fileSize && (
+            <>
+              <span className="text-[var(--border)]">•</span>
+              <span>{formatFileSize(doc.fileSize)}</span>
+            </>
+          )}
+        </div>
+
+        {doc.content && (
+          <p className="text-xs text-zinc-500 line-clamp-2">
+            {doc.content.slice(0, 150).replace(/[#*`|]/g, "")}...
+          </p>
+        )}
       </div>
-
-      <h3 className="font-medium text-sm text-[var(--text-primary)] mb-1 truncate group-hover:text-[var(--accent)] transition-colors">
-        {doc.title}
-      </h3>
-
-      <div className="flex items-center gap-2 mb-2 text-[10px] text-[var(--text-muted)] font-mono">
-        {doc.createdByAgent && <span>{doc.createdByAgent.emoji} {doc.createdByAgent.name}</span>}
-        <span className="text-[var(--border)]">•</span>
-        <span>{timeAgo(doc.createdAt)}</span>
-        <span className="text-[var(--border)]">•</span>
-        <span>v{doc.version}</span>
-      </div>
-
-      <p className="text-xs text-zinc-500 line-clamp-2">
-        {doc.content.slice(0, 150).replace(/[#*`|]/g, "")}...
-      </p>
     </div>
   );
 }
