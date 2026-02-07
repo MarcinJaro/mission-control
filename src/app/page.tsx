@@ -473,11 +473,11 @@ function TaskDetail({
         )}
 
         {/* Deliverables */}
-        {fullTask.deliverables?.length > 0 && (
+        {(fullTask.deliverables?.length ?? 0) > 0 && (
           <div className="p-4 border-b border-zinc-800">
             <h3 className="text-xs uppercase text-zinc-500 font-semibold mb-3 tracking-wider">Deliverables</h3>
             <div className="grid grid-cols-2 gap-2">
-              {fullTask.deliverables.map((d: any) => (
+              {fullTask.deliverables!.map((d: any) => (
                 <a
                   key={d.id}
                   href={d.url}
