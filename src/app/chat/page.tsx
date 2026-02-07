@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import DashboardHeader from "../../components/DashboardHeader";
 
 function timeAgo(timestamp: number) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -200,23 +200,16 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-deep)]">
-      {/* Desktop Header */}
-      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors font-mono text-sm">
-              ← back
-            </Link>
-            <div className="h-4 w-px bg-[var(--border)]" />
-            <h1 className="font-mono text-sm uppercase tracking-widest text-[var(--text-muted)]">
-              Team Chat
-            </h1>
+    <div className="h-screen flex flex-col bg-[var(--bg-deep)] overflow-hidden">
+      <DashboardHeader
+        rightContent={
+          <>
             <OnlineIndicator agents={agents} />
-          </div>
-          <RouterStats />
-        </div>
-      </header>
+            <div className="h-6 w-px bg-[var(--border)]" />
+            <RouterStats />
+          </>
+        }
+      />
       
       {/* Mobile subheader */}
       <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-2 flex items-center justify-between">

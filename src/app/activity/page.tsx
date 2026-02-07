@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState } from "react";
+import DashboardHeader from "../../components/DashboardHeader";
 
 // Agent colors
 const agentColors: Record<string, { bg: string; text: string; dot: string }> = {
@@ -187,21 +188,14 @@ export default function ActivityPage() {
   const types = ["task_created", "task_completed", "message_sent", "chat_message", "cron_executed"];
 
   return (
-    <main className="min-h-screen bg-black p-4 md:p-6 pb-24 md:pb-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white font-mono">Activity Feed</h1>
-            <p className="text-sm text-zinc-500 font-mono">Real-time agent activity tracking</p>
-          </div>
-          
-          {/* Filters */}
+    <div className="min-h-screen bg-[var(--bg-deep)]">
+      <DashboardHeader
+        rightContent={
           <div className="flex flex-wrap gap-2">
             <select
               value={filter || ""}
               onChange={(e) => setFilter(e.target.value || null)}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-zinc-300 font-mono"
+              className="terminal-input px-3 py-1.5 text-sm"
             >
               <option value="">All agents</option>
               {agents.map(agent => (
@@ -212,7 +206,7 @@ export default function ActivityPage() {
             <select
               value={typeFilter || ""}
               onChange={(e) => setTypeFilter(e.target.value || null)}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-zinc-300 font-mono"
+              className="terminal-input px-3 py-1.5 text-sm"
             >
               <option value="">All types</option>
               {types.map(type => (
@@ -220,7 +214,10 @@ export default function ActivityPage() {
               ))}
             </select>
           </div>
-        </div>
+        }
+      />
+      <main className="p-4 md:p-6 pb-24 md:pb-6">
+        <div className="max-w-4xl mx-auto">
         
         {/* Stats */}
         <StatsCard stats={stats} />
@@ -248,5 +245,6 @@ export default function ActivityPage() {
         </div>
       </div>
     </main>
+    </div>
   );
 }

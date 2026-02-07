@@ -8,6 +8,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import DashboardHeader from "../components/DashboardHeader";
 import {
   DndContext,
   DragOverlay,
@@ -841,41 +842,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-deep)]">
-      {/* Desktop Header - hidden on mobile (MobileNav handles it) */}
-      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4 animate-in">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-bold flex items-center gap-3 text-[var(--text-primary)]">
-              <span className="text-2xl">⌘</span>
-              <span className="font-mono tracking-tight">MISSION<span className="text-[var(--accent)]">_</span>CTRL</span>
-            </h1>
-            <nav className="flex items-center gap-1">
-              <a 
-                href="/chat" 
-                className="btn-ghost text-sm flex items-center gap-2"
-              >
-                <span>◈</span>
-                <span>Chat</span>
-              </a>
-              <a 
-                href="/deliverables" 
-                className="btn-ghost text-sm flex items-center gap-2"
-              >
-                <span>◇</span>
-                <span>Deliverables</span>
-              </a>
-              <a 
-                href="/metrics" 
-                className="btn-ghost text-sm flex items-center gap-2"
-              >
-                <span>◆</span>
-                <span>Metrics</span>
-              </a>
-            </nav>
+      <DashboardHeader
+        rightContent={
+          <>
             <div className="h-6 w-px bg-[var(--border)]" />
             <StatsBar />
-          </div>
-          <div className="flex items-center gap-3">
+            <div className="h-6 w-px bg-[var(--border)]" />
             {/* Activity toggle button */}
             <button
               onClick={() => setShowActivitySheet(!showActivitySheet)}
@@ -907,9 +879,9 @@ export default function Dashboard() {
               <span className="font-mono">+</span>
               <span>New Task</span>
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {/* Mobile Stats Bar */}
       <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-2">

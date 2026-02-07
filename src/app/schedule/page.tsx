@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import DashboardHeader from "../../components/DashboardHeader";
 
 // Types for cron jobs
 interface CronJob {
@@ -231,21 +232,16 @@ export default function SchedulePage() {
   }
   
   return (
-    <main className="min-h-screen bg-black p-4 md:p-6 pb-24 md:pb-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white font-mono">Scheduled Tasks</h1>
-            <p className="text-sm text-zinc-500 font-mono">OpenClaw automated routines</p>
-          </div>
+    <div className="min-h-screen bg-[var(--bg-deep)]">
+      <DashboardHeader
+        rightContent={
           <div className="flex items-center gap-2">
             <button
               onClick={() => setView("week")}
               className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
                 view === "week" 
-                  ? "bg-zinc-800 text-white" 
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)]" 
+                  : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               }`}
             >
               Week
@@ -254,20 +250,23 @@ export default function SchedulePage() {
               onClick={() => setView("today")}
               className={`px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
                 view === "today" 
-                  ? "bg-zinc-800 text-white" 
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-[var(--bg-elevated)] text-[var(--text-primary)]" 
+                  : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               }`}
             >
               Today
             </button>
             <button 
               onClick={() => window.location.reload()}
-              className="p-2 text-zinc-500 hover:text-zinc-300"
+              className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             >
               ↻
             </button>
           </div>
-        </div>
+        }
+      />
+      <main className="p-4 md:p-6 pb-24 md:pb-6">
+        <div className="max-w-7xl mx-auto">
         
         {/* Always Running */}
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 mb-6">
@@ -353,5 +352,6 @@ export default function SchedulePage() {
         </div>
       </div>
     </main>
+    </div>
   );
 }

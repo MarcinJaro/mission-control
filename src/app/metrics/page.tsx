@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import DashboardHeader from "../../components/DashboardHeader";
 
 function formatCurrency(amount: number, currency = "PLN") {
   return new Intl.NumberFormat("pl-PL", {
@@ -144,23 +144,13 @@ export default function MetricsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-deep)] text-[var(--text-primary)]">
-      {/* Desktop Header */}
-      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors font-mono text-sm">
-              ← back
-            </Link>
-            <div className="h-4 w-px bg-[var(--border)]" />
-            <h1 className="font-mono text-sm uppercase tracking-widest text-[var(--text-muted)]">
-              Metrics
-            </h1>
-          </div>
+      <DashboardHeader
+        rightContent={
           <div className="text-xs text-[var(--text-muted)] font-mono">
             {new Date().toLocaleDateString("pl-PL")}
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="p-4 md:p-6 max-w-7xl mx-auto">
         {/* Error banner */}

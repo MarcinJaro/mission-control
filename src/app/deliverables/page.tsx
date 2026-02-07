@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import DashboardHeader from "../../components/DashboardHeader";
 
 interface DeliverableFile {
   id: string;
@@ -208,23 +208,12 @@ export default function DeliverablesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-deep)] text-[var(--text-primary)]">
-      {/* Desktop Header */}
-      <header className="hidden md:flex bg-[var(--bg-surface)] border-b border-[var(--border)] px-6 py-4">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors font-mono text-sm">
-              ← back
-            </Link>
-            <div className="h-4 w-px bg-[var(--border)]" />
-            <h1 className="font-mono text-sm uppercase tracking-widest text-[var(--text-muted)]">
-              Deliverables
-            </h1>
+      <DashboardHeader
+        rightContent={
+          <>
             <span className="text-[var(--accent)] bg-[var(--accent-dim)] px-2 py-0.5 rounded text-xs font-mono">
-              {data?.count || 0}
+              {data?.count || 0} files
             </span>
-          </div>
-          
-          <div className="flex items-center gap-3">
             <select
               value={agentFilter}
               onChange={(e) => setAgentFilter(e.target.value)}
@@ -243,9 +232,9 @@ export default function DeliverablesPage() {
             >
               Refresh
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
       
       {/* Mobile Filter Bar */}
       <div className="md:hidden bg-[var(--bg-surface)] border-b border-[var(--border)] px-4 py-3 flex items-center gap-2">
