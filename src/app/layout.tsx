@@ -21,7 +21,9 @@ export const metadata: Metadata = {
   title: "Mission Control",
   description: "AI Agent Command Center",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
   },
 };
 
