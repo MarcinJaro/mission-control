@@ -453,3 +453,80 @@ export const byStatus = query({
     return enriched;
   },
 });
+
+// Add a deliverable to a task
+export const addDeliverable = mutation({
+  args: {
+    id: v.id("tasks"),
+    title: v.string(),
+    url: v.string(),
+    type: v.union(
+      v.literal("report"),
+      v.literal("code"),
+      v.literal("design"),
+      v.literal("doc"),
+      v.literal("link"),
+      v.literal("other")
+    ),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+
+    let agent;
+    if (args.agentSessionKey) {
+      agent = await ctx.db
+        .query("agents")
+        .withIndex("by_sessionKey", (q) => q.eq("sessionKey", args.agentSessionKey!))
+        .first();
+    }
+
+    const now = Date.now();
+    const deliverable = {
+      id: `d_${now}_${Math.random().toString(36).slice(2, 8)}`,
+      title: args.title,
+      url: args.url,
+      type: args.type,
+      addedBy: agent?._id,
+      addedAt: now,
+    };
+
+    const existing = task.deliverables || [];
+    await ctx.db.patch(args.id, {
+      deliverables: [...existing, deliverable],
+      updatedAt: now,
+    });
+
+    // Log activity
+    await ctx.db.insert("activities", {
+      type: "task_updated",
+      agentId: agent?._id || task.assigneeIds[0] || (await ctx.db.query("agents").first())?._id!,
+      message: `📎 Added deliverable "${args.title}" to "${task.title}"`,
+      targetId: args.id,
+      targetType: "task",
+      createdAt: now,
+    });
+
+    return deliverable.id;
+  },
+});
+
+// Remove a deliverable from a task
+export const removeDeliverable = mutation({
+  args: {
+    id: v.id("tasks"),
+    deliverableId: v.string(),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+
+    const existing = task.deliverables || [];
+    await ctx.db.patch(args.id, {
+      deliverables: existing.filter((d) => d.id !== args.deliverableId),
+      updatedAt: Date.now(),
+    });
+  },
+});

@@ -149,22 +149,45 @@ const statusColors: Record<string, string> = {
 };
 
 // Task Card Component (for drag overlay)
+const deliverableIcons: Record<string, string> = {
+  report: "📄",
+  code: "💻",
+  design: "🎨",
+  doc: "📝",
+  link: "🔗",
+  other: "📎",
+};
+
 function TaskCardContent({ task }: { task: any }) {
   return (
     <>
       <h4 className="font-medium text-sm mb-2 line-clamp-2">{task.title}</h4>
-      {task.assignees?.length > 0 && (
-        <div className="flex items-center gap-1 mt-2">
-          {task.assignees.slice(0, 3).map((agent: any) => (
-            <div key={agent?._id} title={agent?.name}>
-              <Avatar agent={agent || { emoji: "👤" }} size="sm" />
-            </div>
-          ))}
-          {task.assignees.length > 3 && (
-            <span className="text-xs text-zinc-500">+{task.assignees.length - 3}</span>
-          )}
-        </div>
-      )}
+      <div className="flex items-center justify-between mt-2">
+        {task.assignees?.length > 0 && (
+          <div className="flex items-center gap-1">
+            {task.assignees.slice(0, 3).map((agent: any) => (
+              <div key={agent?._id} title={agent?.name}>
+                <Avatar agent={agent || { emoji: "👤" }} size="sm" />
+              </div>
+            ))}
+            {task.assignees.length > 3 && (
+              <span className="text-xs text-zinc-500">+{task.assignees.length - 3}</span>
+            )}
+          </div>
+        )}
+        {task.deliverables?.length > 0 && (
+          <div className="flex items-center gap-0.5" title={`${task.deliverables.length} deliverable(s)`}>
+            {task.deliverables.slice(0, 4).map((d: any) => (
+              <span key={d.id} className="text-xs opacity-70 hover:opacity-100 transition-opacity" title={d.title}>
+                {deliverableIcons[d.type] || "📎"}
+              </span>
+            ))}
+            {task.deliverables.length > 4 && (
+              <span className="text-[10px] text-zinc-500">+{task.deliverables.length - 4}</span>
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -446,6 +469,33 @@ function TaskDetail({
         {fullTask.description && (
           <div className="p-4 border-b border-zinc-800">
             <p className="text-zinc-300 whitespace-pre-wrap">{fullTask.description}</p>
+          </div>
+        )}
+
+        {/* Deliverables */}
+        {fullTask.deliverables?.length > 0 && (
+          <div className="p-4 border-b border-zinc-800">
+            <h3 className="text-xs uppercase text-zinc-500 font-semibold mb-3 tracking-wider">Deliverables</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {fullTask.deliverables.map((d: any) => (
+                <a
+                  key={d.id}
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-lg px-3 py-2 transition-all group"
+                >
+                  <span className="text-lg">{deliverableIcons[d.type] || "📎"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate group-hover:text-emerald-400 transition-colors">{d.title}</p>
+                    <p className="text-[10px] text-zinc-500 truncate">{d.url}</p>
+                  </div>
+                  <svg className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 

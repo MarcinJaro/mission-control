@@ -66,6 +66,22 @@ export default defineSchema({
     updatedAt: v.number(),
     completedAt: v.optional(v.number()),
     metadata: v.optional(v.any()),
+    // Deliverables - files/links produced by this task
+    deliverables: v.optional(v.array(v.object({
+      id: v.string(), // unique id (nanoid or timestamp)
+      title: v.string(), // e.g. "Security Audit Report"
+      url: v.string(), // file path, GitHub URL, or any link
+      type: v.union(
+        v.literal("report"),
+        v.literal("code"),
+        v.literal("design"),
+        v.literal("doc"),
+        v.literal("link"),
+        v.literal("other")
+      ),
+      addedBy: v.optional(v.id("agents")),
+      addedAt: v.number(),
+    }))),
   })
     .index("by_status", ["status"])
     .index("by_project", ["projectId"])
