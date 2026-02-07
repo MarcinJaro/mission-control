@@ -480,15 +480,14 @@ function TaskDetail({
               {fullTask.deliverables!.map((d: any) => (
                 <a
                   key={d.id}
-                  href={d.url}
-                  target="_blank"
+                  href={d.url.startsWith("/") ? d.url : d.url}
+                  target={d.url.startsWith("/") ? "_self" : "_blank"}
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-lg px-3 py-2 transition-all group"
                 >
                   <span className="text-lg">{deliverableIcons[d.type] || "📎"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate group-hover:text-emerald-400 transition-colors">{d.title}</p>
-                    <p className="text-[10px] text-zinc-500 truncate">{d.url}</p>
                   </div>
                   <svg className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
