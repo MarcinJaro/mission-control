@@ -319,7 +319,7 @@ function TaskDetail({
   const fullTask = useQuery(api.tasks.get, { id: task._id });
   const agents = useQuery(api.agents.list);
   const [newComment, setNewComment] = useState("");
-  const [commentAs, setCommentAs] = useState("human");
+  const [commentAs, setCommentAs] = useState("main");
   const [showAssignMenu, setShowAssignMenu] = useState(false);
   const addMessage = useMutation(api.messages.create);
   const updateStatus = useMutation(api.tasks.updateStatus);
@@ -327,12 +327,17 @@ function TaskDetail({
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    await addMessage({
-      taskId: task._id,
-      content: newComment,
-      agentSessionKey: commentAs,
-    });
-    setNewComment("");
+    try {
+      await addMessage({
+        taskId: task._id,
+        content: newComment,
+        agentSessionKey: commentAs,
+      });
+      setNewComment("");
+    } catch (err) {
+      console.error("Failed to send comment:", err);
+      alert("Failed to send comment. Check console for details.");
+    }
   };
 
   const handleStatusChange = async (newStatus: string) => {
