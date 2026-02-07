@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
   DragOverlay,
@@ -633,17 +634,130 @@ function StatsBar() {
   );
 }
 
+// Activity Sheet Component
+function ActivitySheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const activities = useQuery(api.activities.feed, { limit: 30 });
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black z-40"
+          />
+          
+          {/* Sheet */}
+          <motion.div
+            initial={{ x: -320 }}
+            animate={{ x: 0 }}
+            exit={{ x: -320 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed left-0 top-0 bottom-0 w-80 bg-[var(--bg-surface)] border-r border-[var(--border)] z-40 flex flex-col"
+          >
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] font-medium">
+                Activity Feed
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-2">
+              {activities?.map((activity, i) => (
+                <div key={activity._id} style={{ animationDelay: `${i * 0.05}s` }}>
+                  <ActivityItem activity={activity} />
+                </div>
+              ))}
+              {(!activities || activities.length === 0) && (
+                <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no activity</p>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// Agents Sheet Component
+function AgentsSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const agents = useQuery(api.agents.list);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black z-40"
+          />
+          
+          {/* Sheet */}
+          <motion.div
+            initial={{ x: 288 }}
+            animate={{ x: 0 }}
+            exit={{ x: 288 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed right-0 top-0 bottom-0 w-72 bg-[var(--bg-surface)] border-l border-[var(--border)] z-40 flex flex-col"
+          >
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] font-medium">
+                Agents
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {agents?.map((agent, i) => (
+                <div key={agent._id} className="animate-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+                  <AgentCard agent={agent} />
+                </div>
+              ))}
+              {(!agents || agents.length === 0) && (
+                <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no agents</p>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // Main Dashboard
 export default function Dashboard() {
   const agents = useQuery(api.agents.list);
   const tasksByStatus = useQuery(api.tasks.byStatus);
-  const activities = useQuery(api.activities.feed, { limit: 30 });
   const updateStatus = useMutation(api.tasks.updateStatus);
   const deleteTask = useMutation(api.tasks.deleteTask);
   
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [activeTask, setActiveTask] = useState<any>(null);
+  const [showActivitySheet, setShowActivitySheet] = useState(false);
+  const [showAgentsSheet, setShowAgentsSheet] = useState(false);
 
   const handleDeleteTask = async (taskId: string) => {
     await deleteTask({ id: taskId as Id<"tasks"> });
@@ -761,13 +875,39 @@ export default function Dashboard() {
             <div className="h-6 w-px bg-[var(--border)]" />
             <StatsBar />
           </div>
-          <button
-            onClick={() => setShowCreateTask(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <span className="font-mono">+</span>
-            <span>New Task</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Activity toggle button */}
+            <button
+              onClick={() => setShowActivitySheet(!showActivitySheet)}
+              className="btn-ghost flex items-center gap-2"
+              title="Toggle Activity Feed"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              <span>Activity</span>
+            </button>
+            
+            {/* Agents toggle button */}
+            <button
+              onClick={() => setShowAgentsSheet(!showAgentsSheet)}
+              className="btn-ghost flex items-center gap-2"
+              title="Toggle Agents Panel"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>Agents</span>
+            </button>
+            
+            <button
+              onClick={() => setShowCreateTask(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <span className="font-mono">+</span>
+              <span>New Task</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -776,28 +916,9 @@ export default function Dashboard() {
         <StatsBar />
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Now full width */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Activity Feed - Left Sidebar (Desktop only) */}
-        <aside className="hidden lg:flex w-80 border-r border-[var(--border)] flex-col bg-[var(--bg-surface)] animate-in delay-1">
-          <div className="p-4 border-b border-[var(--border)]">
-            <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
-              Activity Feed
-            </h2>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 py-2">
-            {activities?.map((activity, i) => (
-              <div key={activity._id} style={{ animationDelay: `${i * 0.05}s` }}>
-                <ActivityItem activity={activity} />
-              </div>
-            ))}
-            {(!activities || activities.length === 0) && (
-              <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no activity</p>
-            )}
-          </div>
-        </aside>
-
-        {/* Kanban Board - Center (full width on mobile) */}
+        {/* Kanban Board - Full width */}
         <main className="flex-1 overflow-x-auto animate-in delay-2">
           <div className="p-3 md:p-6 grid-bg min-h-full">
             <DndContext
@@ -852,26 +973,11 @@ export default function Dashboard() {
             </DndContext>
           </div>
         </main>
-
-        {/* Agents - Right Sidebar (Desktop only) */}
-        <aside className="hidden xl:flex w-72 border-l border-[var(--border)] flex-col bg-[var(--bg-surface)] animate-in delay-3">
-          <div className="p-4 border-b border-[var(--border)]">
-            <h2 className="section-header font-mono text-xs uppercase tracking-widest text-[var(--text-muted)] m-0">
-              Agents
-            </h2>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {agents?.map((agent, i) => (
-              <div key={agent._id} className="animate-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-                <AgentCard agent={agent} />
-              </div>
-            ))}
-            {(!agents || agents.length === 0) && (
-              <p className="text-[var(--text-muted)] text-center py-8 font-mono text-sm">∅ no agents</p>
-            )}
-          </div>
-        </aside>
       </div>
+
+      {/* Animated Sheets */}
+      <ActivitySheet isOpen={showActivitySheet} onClose={() => setShowActivitySheet(false)} />
+      <AgentsSheet isOpen={showAgentsSheet} onClose={() => setShowAgentsSheet(false)} />
 
       {/* Modals */}
       {selectedTask && (

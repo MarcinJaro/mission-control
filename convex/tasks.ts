@@ -304,6 +304,78 @@ export const assign = mutation({
   },
 });
 
+// Auto-transition: evaluate if task should move to next status
+// Based on policies: auto_approve (inbox → assigned for low/medium priority)
+export const autoTransition = mutation({
+  args: {
+    id: v.id("tasks"),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+
+    // Get auto_approve policy
+    const policy = await ctx.db
+      .query("policies")
+      .withIndex("by_name", (q) => q.eq("name", "auto_approve"))
+      .first();
+
+    const autoApproveConfig = policy?.value ?? {
+      enabled: true,
+      allowedPriorities: ["low", "medium"],
+    };
+
+    if (!autoApproveConfig.enabled) return { transitioned: false, reason: "auto_approve disabled" };
+
+    const now = Date.now();
+    const transitions: Array<{ from: string; to: string; condition: () => boolean }> = [
+      {
+        // inbox → assigned (when has assignees and priority is auto-approvable)
+        from: "inbox",
+        to: "assigned",
+        condition: () =>
+          task.assigneeIds.length > 0 &&
+          autoApproveConfig.allowedPriorities.includes(task.priority),
+      },
+      {
+        // assigned → in_progress (when agent starts working)
+        from: "assigned",
+        to: "in_progress",
+        condition: () => true, // Agent explicitly triggers this
+      },
+    ];
+
+    for (const t of transitions) {
+      if (task.status === t.from && t.condition()) {
+        await ctx.db.patch(args.id, { status: t.to as any, updatedAt: now });
+
+        // Log activity
+        let agent;
+        if (args.agentSessionKey) {
+          agent = await ctx.db
+            .query("agents")
+            .withIndex("by_sessionKey", (q) => q.eq("sessionKey", args.agentSessionKey!))
+            .first();
+        }
+
+        await ctx.db.insert("activities", {
+          type: "task_updated",
+          agentId: agent?._id || task.assigneeIds[0] || (await ctx.db.query("agents").first())?._id!,
+          message: `⚡ Auto-transition: "${task.title}" ${t.from} → ${t.to}`,
+          targetId: args.id,
+          targetType: "task",
+          createdAt: now,
+        });
+
+        return { transitioned: true, from: t.from, to: t.to };
+      }
+    }
+
+    return { transitioned: false, reason: "no matching transition" };
+  },
+});
+
 // Delete a task
 export const deleteTask = mutation({
   args: { 

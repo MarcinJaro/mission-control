@@ -94,7 +94,7 @@ export function CommandPalette() {
 
   // Fetch tasks and messages for search
   const tasks = useQuery(api.tasks.list, {});
-  const chatMessages = useQuery(api.chat.recent, { limit: 50 });
+  const chatMessages = useQuery(api.chat.list, { limit: 50 });
 
   // Build search results
   const results: SearchResult[] = [];

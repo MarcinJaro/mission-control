@@ -158,7 +158,7 @@ export default function ActivityPage() {
   const stats = useQuery(api.activityLogs.stats, { hoursAgo: 24 });
   
   // Also fetch chat messages and task updates as activity sources
-  const chatMessages = useQuery(api.chat.recent, { limit: 30 });
+  const chatMessages = useQuery(api.chat.list, { limit: 30 });
   const recentMessages = useQuery(api.messages.recent, { limit: 30 });
   
   // Combine all activity sources

@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as internal_ from "../internal.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
+import type * as policies from "../policies.js";
 import type * as projects from "../projects.js";
 import type * as router from "../router.js";
 import type * as tasks from "../tasks.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   internal: typeof internal_;
   messages: typeof messages;
   notifications: typeof notifications;
+  policies: typeof policies;
   projects: typeof projects;
   router: typeof router;
   tasks: typeof tasks;

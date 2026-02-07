@@ -181,6 +181,16 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_task", ["taskId"]),
 
+  // Policies - runtime configuration without redeploy
+  policies: defineTable({
+    name: v.string(),
+    value: v.any(),
+    description: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"]),
+
   // Notifications - @mentions and alerts
   notifications: defineTable({
     targetAgentId: v.id("agents"),
