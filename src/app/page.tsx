@@ -342,11 +342,16 @@ function TaskDetail({
   const fullTask = useQuery(api.tasks.get, { id: task._id });
   const agents = useQuery(api.agents.list);
   const [newComment, setNewComment] = useState("");
-  const [commentAs, setCommentAs] = useState("main");
   const [showAssignMenu, setShowAssignMenu] = useState(false);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState("");
+  const [cursorPosition, setCursorPosition] = useState(0);
   const addMessage = useMutation(api.messages.create);
   const updateStatus = useMutation(api.tasks.updateStatus);
   const assignTask = useMutation(api.tasks.assign);
+
+  // Issue 2: Always comment as user (main)
+  const commentAs = "main";
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -357,6 +362,7 @@ function TaskDetail({
         agentSessionKey: commentAs,
       });
       setNewComment("");
+      setShowMentions(false);
     } catch (err) {
       console.error("Failed to send comment:", err);
       alert("Failed to send comment. Check console for details.");
@@ -384,13 +390,53 @@ function TaskDetail({
     });
   };
 
+  // Issue 3: Quick tag agents
+  const insertMention = (agentName: string) => {
+    const before = newComment.slice(0, cursorPosition);
+    const after = newComment.slice(cursorPosition);
+    setNewComment(before + `@${agentName} ` + after);
+    setCursorPosition(before.length + agentName.length + 2);
+  };
+
+  // Issue 4: @mention autocomplete
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursor = e.target.selectionStart || 0;
+    setNewComment(value);
+    setCursorPosition(cursor);
+
+    // Check for @ symbol
+    const beforeCursor = value.slice(0, cursor);
+    const atMatch = beforeCursor.match(/@(\w*)$/);
+    
+    if (atMatch) {
+      setMentionFilter(atMatch[1].toLowerCase());
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
+    }
+  };
+
+  const selectMention = (agentName: string) => {
+    const beforeCursor = newComment.slice(0, cursorPosition);
+    const afterCursor = newComment.slice(cursorPosition);
+    const beforeAt = beforeCursor.replace(/@\w*$/, '');
+    setNewComment(beforeAt + `@${agentName} ` + afterCursor);
+    setCursorPosition(beforeAt.length + agentName.length + 2);
+    setShowMentions(false);
+  };
+
+  const filteredAgents = agents?.filter(agent => 
+    mentionFilter ? agent.name.toLowerCase().includes(mentionFilter) : true
+  );
+
   if (!fullTask) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-start justify-between">
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 max-w-2xl w-full max-h-[90vh] flex flex-col">
+        {/* Header - Fixed */}
+        <div className="p-4 border-b border-zinc-800 flex items-start justify-between flex-shrink-0">
           <div className="flex-1">
             <h2 className="text-xl font-semibold">{fullTask.title}</h2>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
@@ -465,87 +511,122 @@ function TaskDetail({
           </button>
         </div>
 
-        {/* Description */}
-        {fullTask.description && (
-          <div className="p-4 border-b border-zinc-800">
-            <p className="text-zinc-300 whitespace-pre-wrap">{fullTask.description}</p>
-          </div>
-        )}
-
-        {/* Deliverables */}
-        {(fullTask.deliverables?.length ?? 0) > 0 && (
-          <div className="p-4 border-b border-zinc-800">
-            <h3 className="text-xs uppercase text-zinc-500 font-semibold mb-3 tracking-wider">Deliverables</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {fullTask.deliverables!.map((d: any) => (
-                <a
-                  key={d.id}
-                  href={d.url.startsWith("/") ? d.url : d.url}
-                  target={d.url.startsWith("/") ? "_self" : "_blank"}
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-lg px-3 py-2 transition-all group"
-                >
-                  <span className="text-lg">{deliverableIcons[d.type] || "📎"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate group-hover:text-emerald-400 transition-colors">{d.title}</p>
-                  </div>
-                  <svg className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              ))}
+        {/* Issue 1: Scrollable content area (description + deliverables + messages) */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Description */}
+          {fullTask.description && (
+            <div className="p-4 border-b border-zinc-800">
+              <p className="text-zinc-300 whitespace-pre-wrap">{fullTask.description}</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {fullTask.messages?.map((msg: any) => (
-            <div key={msg._id} className="flex items-start gap-3">
-              <Avatar agent={msg.fromAgent || { emoji: "👤" }} size="md" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{msg.fromAgent?.name || "Unknown"}</span>
-                  <span className="text-xs text-zinc-500">{timeAgo(msg.createdAt)}</span>
-                </div>
-                <p className="text-zinc-300 mt-1 whitespace-pre-wrap">{msg.content}</p>
+          {/* Deliverables */}
+          {(fullTask.deliverables?.length ?? 0) > 0 && (
+            <div className="p-4 border-b border-zinc-800">
+              <h3 className="text-xs uppercase text-zinc-500 font-semibold mb-3 tracking-wider">Deliverables</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {fullTask.deliverables!.map((d: any) => (
+                  <a
+                    key={d.id}
+                    href={d.url.startsWith("/") ? d.url : d.url}
+                    target={d.url.startsWith("/") ? "_self" : "_blank"}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-lg px-3 py-2 transition-all group"
+                  >
+                    <span className="text-lg">{deliverableIcons[d.type] || "📎"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate group-hover:text-emerald-400 transition-colors">{d.title}</p>
+                    </div>
+                    <svg className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ))}
               </div>
             </div>
-          ))}
-          {(!fullTask.messages || fullTask.messages.length === 0) && (
-            <p className="text-zinc-500 text-center py-4">No comments yet</p>
           )}
+
+          {/* Messages */}
+          <div className="p-4 space-y-4">
+            {fullTask.messages?.map((msg: any) => (
+              <div key={msg._id} className="flex items-start gap-3">
+                <Avatar agent={msg.fromAgent || { emoji: "👤" }} size="md" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{msg.fromAgent?.name || "Unknown"}</span>
+                    <span className="text-xs text-zinc-500">{timeAgo(msg.createdAt)}</span>
+                  </div>
+                  <p className="text-zinc-300 mt-1 whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {(!fullTask.messages || fullTask.messages.length === 0) && (
+              <p className="text-zinc-500 text-center py-4">No comments yet</p>
+            )}
+          </div>
         </div>
 
-        {/* Comment input */}
-        <div className="p-4 border-t border-zinc-800">
-          <div className="flex gap-2 items-center">
-            <select
-              value={commentAs}
-              onChange={(e) => setCommentAs(e.target.value)}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2 text-sm"
-              title="Comment as"
-            >
-              {agents?.map((agent) => (
-                <option key={agent._id} value={agent.sessionKey}>
-                  {agent.emoji} {agent.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-              placeholder="Add a comment... (use @name to mention)"
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-zinc-600"
-            />
-            <button
-              onClick={handleAddComment}
-              className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-colors"
-            >
-              Send
-            </button>
+        {/* Comment input - Fixed at bottom */}
+        <div className="p-4 border-t border-zinc-800 flex-shrink-0">
+          {/* Issue 3: Quick tag agent chips */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {agents?.map((agent) => (
+              <button
+                key={agent._id}
+                onClick={() => insertMention(agent.name)}
+                className="inline-flex items-center gap-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded px-2 py-1 text-xs transition-colors"
+                title={`Mention @${agent.name}`}
+              >
+                <span>{agent.emoji}</span>
+                <span className="hidden sm:inline">{agent.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="relative">
+            {/* Issue 4: @mention dropdown */}
+            {showMentions && filteredAgents && filteredAgents.length > 0 && (
+              <div className="absolute bottom-full left-0 mb-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 min-w-[200px] max-h-[200px] overflow-y-auto">
+                {filteredAgents.map((agent) => (
+                  <button
+                    key={agent._id}
+                    onClick={() => selectMention(agent.name)}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-700 text-left"
+                  >
+                    <span className="text-lg">{agent.emoji}</span>
+                    <span className="flex-1">{agent.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2 items-center">
+              {/* Issue 2: Fixed user label instead of dropdown */}
+              <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm flex items-center gap-1">
+                <span>👤</span>
+                <span className="hidden sm:inline">Marcin</span>
+              </div>
+              <input
+                type="text"
+                value={newComment}
+                onChange={handleCommentChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !showMentions) {
+                    handleAddComment();
+                  } else if (e.key === "Escape") {
+                    setShowMentions(false);
+                  }
+                }}
+                placeholder="Add a comment... (type @ to mention)"
+                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-zinc-600"
+              />
+              <button
+                onClick={handleAddComment}
+                className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-colors"
+              >
+                Send
+              </button>
+            </div>
           </div>
         </div>
       </div>
