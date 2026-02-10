@@ -114,6 +114,32 @@ export const undelivered = query({
   },
 });
 
+// Acknowledge notification (agent confirms receipt)
+export const acknowledge = mutation({
+  args: { id: v.id("notifications") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      acknowledgedAt: Date.now(),
+      read: true,
+      readAt: Date.now(),
+    });
+  },
+});
+
+// Record delivery attempt (for retry tracking)
+export const recordDeliveryAttempt = mutation({
+  args: { id: v.id("notifications") },
+  handler: async (ctx, args) => {
+    const notif = await ctx.db.get(args.id);
+    if (!notif) return;
+    await ctx.db.patch(args.id, {
+      deliveryAttempts: (notif.deliveryAttempts || 0) + 1,
+      lastPingAt: Date.now(),
+      delivered: true,
+    });
+  },
+});
+
 // Count unread for agent
 export const countUnread = query({
   args: { agentSessionKey: v.string() },

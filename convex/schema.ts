@@ -65,6 +65,21 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
     completedAt: v.optional(v.number()),
+    // Review process
+    reviewerId: v.optional(v.id("agents")), // who reviews (default: Dredd)
+    rejectionCount: v.optional(v.number()), // times rejected (max 2 → escalate)
+    rejectedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    // Deduplication
+    titleHash: v.optional(v.string()), // lowercase title hash for dedup
+    // Effort estimation
+    effort: v.optional(v.union(
+      v.literal("xs"),    // < 1h
+      v.literal("s"),     // 1-4h
+      v.literal("m"),     // 4h-1d
+      v.literal("l"),     // 1-3d
+      v.literal("xl")     // 3d+
+    )),
     metadata: v.optional(v.any()),
     // Deliverables - files/links produced by this task
     deliverables: v.optional(v.array(v.object({
@@ -86,7 +101,8 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_project", ["projectId"])
     .index("by_priority", ["priority"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_createdAt", ["createdAt"])
+    .index("by_titleHash", ["titleHash"]),
 
   // Messages - comments/discussion on tasks
   messages: defineTable({
@@ -229,6 +245,9 @@ export default defineSchema({
     referenceType: v.optional(v.string()),
     read: v.boolean(),
     delivered: v.boolean(),
+    deliveryAttempts: v.optional(v.number()), // how many times we tried to deliver
+    lastPingAt: v.optional(v.number()), // last time agent was pinged about this
+    acknowledgedAt: v.optional(v.number()), // agent confirmed receipt
     createdAt: v.number(),
     readAt: v.optional(v.number()),
   })

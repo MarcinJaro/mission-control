@@ -80,6 +80,9 @@ export const create = mutation({
     assigneeIds: v.optional(v.array(v.id("agents"))),
     createdBySessionKey: v.optional(v.string()),
     dueAt: v.optional(v.number()),
+    effort: v.optional(v.union(
+      v.literal("xs"), v.literal("s"), v.literal("m"), v.literal("l"), v.literal("xl")
+    )),
   },
   handler: async (ctx, args) => {
     // Find creator agent
@@ -92,6 +95,18 @@ export const create = mutation({
       createdBy = agent?._id;
     }
     
+    // Deduplication check
+    const titleHash = args.title.toLowerCase().trim().replace(/\s+/g, " ");
+    const existing = await ctx.db
+      .query("tasks")
+      .withIndex("by_titleHash", (q) => q.eq("titleHash", titleHash))
+      .filter((q) => q.neq(q.field("status"), "done"))
+      .first();
+    if (existing) {
+      // Return existing task ID instead of creating duplicate
+      return existing._id;
+    }
+
     const now = Date.now();
     const id = await ctx.db.insert("tasks", {
       title: args.title,
@@ -102,6 +117,8 @@ export const create = mutation({
       assigneeIds: args.assigneeIds || [],
       createdBy,
       dueAt: args.dueAt,
+      titleHash: titleHash,
+      effort: args.effort,
       createdAt: now,
       updatedAt: now,
     });
@@ -376,6 +393,138 @@ export const autoTransition = mutation({
   },
 });
 
+// Submit task for review
+export const submitForReview = mutation({
+  args: {
+    id: v.id("tasks"),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+
+    // Find Dredd as default reviewer
+    const dredd = await ctx.db
+      .query("agents")
+      .withIndex("by_sessionKey", (q) => q.eq("sessionKey", "dredd"))
+      .first();
+
+    const now = Date.now();
+    await ctx.db.patch(args.id, {
+      status: "review",
+      reviewerId: dredd?._id,
+      updatedAt: now,
+    });
+
+    // Notify reviewer
+    if (dredd) {
+      await ctx.db.insert("notifications", {
+        targetAgentId: dredd._id,
+        type: "review_request",
+        title: "Review requested",
+        content: task.title,
+        referenceId: args.id,
+        referenceType: "task",
+        read: false,
+        delivered: false,
+        createdAt: now,
+      });
+    }
+
+    // Log activity
+    let agent;
+    if (args.agentSessionKey) {
+      agent = await ctx.db
+        .query("agents")
+        .withIndex("by_sessionKey", (q) => q.eq("sessionKey", args.agentSessionKey!))
+        .first();
+    }
+    await ctx.db.insert("activities", {
+      type: "task_updated",
+      agentId: agent?._id || task.assigneeIds[0] || (await ctx.db.query("agents").first())?._id!,
+      message: `🔍 "${task.title}" submitted for review`,
+      targetId: args.id,
+      targetType: "task",
+      createdAt: now,
+    });
+  },
+});
+
+// Reject task (reviewer sends back)
+export const reject = mutation({
+  args: {
+    id: v.id("tasks"),
+    reason: v.string(),
+    agentSessionKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.id);
+    if (!task) throw new Error("Task not found");
+
+    const rejectionCount = (task.rejectionCount || 0) + 1;
+    const now = Date.now();
+
+    if (rejectionCount >= 2) {
+      // Max re-reviews exceeded → escalate to Marcin
+      await ctx.db.patch(args.id, {
+        status: "blocked",
+        rejectionCount,
+        rejectedAt: now,
+        rejectionReason: args.reason,
+        updatedAt: now,
+      });
+      // Notify Marcin
+      await ctx.scheduler.runAfter(0, internal.internal.notifyMarcin, {
+        type: "blocked",
+        taskTitle: task.title,
+        agentName: "Dredd",
+        message: `2x rejected: ${args.reason}`,
+      });
+    } else {
+      // Back to in_progress
+      await ctx.db.patch(args.id, {
+        status: "in_progress",
+        rejectionCount,
+        rejectedAt: now,
+        rejectionReason: args.reason,
+        updatedAt: now,
+      });
+    }
+
+    // Notify assignees
+    for (const assigneeId of task.assigneeIds) {
+      await ctx.db.insert("notifications", {
+        targetAgentId: assigneeId,
+        type: "task_update",
+        title: rejectionCount >= 2 ? "Task escalated (2x rejected)" : "Task rejected — fix required",
+        content: `${task.title}: ${args.reason}`,
+        referenceId: args.id,
+        referenceType: "task",
+        read: false,
+        delivered: false,
+        createdAt: now,
+      });
+    }
+
+    // Log activity
+    let agent;
+    if (args.agentSessionKey) {
+      agent = await ctx.db
+        .query("agents")
+        .withIndex("by_sessionKey", (q) => q.eq("sessionKey", args.agentSessionKey!))
+        .first();
+    }
+    await ctx.db.insert("activities", {
+      type: "task_updated",
+      agentId: agent?._id || (await ctx.db.query("agents").first())?._id!,
+      message: `❌ Rejected "${task.title}" (${rejectionCount}/2): ${args.reason}`,
+      targetId: args.id,
+      targetType: "task",
+      createdAt: now,
+    });
+  },
+});
+
 // Delete a task
 export const deleteTask = mutation({
   args: { 
@@ -509,6 +658,73 @@ export const addDeliverable = mutation({
     });
 
     return deliverable.id;
+  },
+});
+
+// Weekly stats: completion rate, avg time, bottlenecks
+export const weeklyStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+    const allTasks = await ctx.db.query("tasks").collect();
+
+    const completedThisWeek = allTasks.filter(
+      (t) => t.status === "done" && t.completedAt && t.completedAt > weekAgo
+    );
+    const createdThisWeek = allTasks.filter((t) => t.createdAt > weekAgo);
+    const stuck = allTasks.filter(
+      (t) => t.status === "assigned" && t.updatedAt < now - 24 * 60 * 60 * 1000
+    );
+    const inProgress = allTasks.filter((t) => t.status === "in_progress");
+    const blocked = allTasks.filter((t) => t.status === "blocked");
+    const inReview = allTasks.filter((t) => t.status === "review");
+
+    // Avg completion time (created → done)
+    const completionTimes = completedThisWeek
+      .filter((t) => t.completedAt && t.createdAt)
+      .map((t) => t.completedAt! - t.createdAt);
+    const avgCompletionMs =
+      completionTimes.length > 0
+        ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length
+        : 0;
+
+    // Per-agent stats
+    const agentStats: Record<string, { completed: number; assigned: number; inProgress: number }> = {};
+    for (const t of allTasks) {
+      for (const aid of t.assigneeIds) {
+        const key = aid.toString();
+        if (!agentStats[key]) agentStats[key] = { completed: 0, assigned: 0, inProgress: 0 };
+        if (t.status === "done" && t.completedAt && t.completedAt > weekAgo) agentStats[key].completed++;
+        if (t.status === "assigned") agentStats[key].assigned++;
+        if (t.status === "in_progress") agentStats[key].inProgress++;
+      }
+    }
+
+    // Enrich agent stats with names
+    const enrichedAgentStats = await Promise.all(
+      Object.entries(agentStats).map(async ([id, stats]) => {
+        const agent = await ctx.db.get(id as any) as any;
+        return { name: agent?.name || "?", emoji: agent?.emoji || "", ...stats };
+      })
+    );
+
+    return {
+      period: { from: weekAgo, to: now },
+      created: createdThisWeek.length,
+      completed: completedThisWeek.length,
+      completionRate: createdThisWeek.length > 0
+        ? Math.round((completedThisWeek.length / createdThisWeek.length) * 100)
+        : 0,
+      avgCompletionHours: Math.round(avgCompletionMs / (60 * 60 * 1000) * 10) / 10,
+      stuck: stuck.length,
+      inProgress: inProgress.length,
+      blocked: blocked.length,
+      inReview: inReview.length,
+      agentStats: enrichedAgentStats,
+      bottlenecks: stuck.map((t) => ({ title: t.title, priority: t.priority, ageHours: Math.round((now - t.updatedAt) / (60 * 60 * 1000)) })),
+    };
   },
 });
 

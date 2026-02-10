@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 
-const WAKE_ENDPOINT = "https://zosia.creativerebels.pl/mc-chat/wake";
+// Wake endpoint disabled — agents now poll via per-agent cron jobs
+// Old endpoint was broken (pointed to Zosia's webhook, not a universal router)
+const WAKE_ENDPOINT = ""; // kept for reference
 
 // Wake an agent via webhook (called from scheduler)
 export const wakeAgent = internalAction({
@@ -26,25 +28,11 @@ npx convex run --prod tasks:updateStatus '{"id": "${args.taskId}", "status": "do
 
 Jak potrzebujesz pomocy lub masz pytania, użyj MC Chat lub @mention odpowiednią osobę.`;
 
-    try {
-      const response = await fetch(WAKE_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId: args.agentSessionKey,
-          message,
-          authorName: args.assignerName || "Mission Control",
-          content: `Task assigned: ${args.taskTitle}`,
-        }),
-      });
-
-      const result = await response.json();
-      console.log(`Woke agent ${args.agentSessionKey}:`, result);
-      return { success: true, result };
-    } catch (error) {
-      console.error(`Failed to wake agent ${args.agentSessionKey}:`, error);
-      return { success: false, error: String(error) };
-    }
+    // Agents now pick up tasks via per-agent cron polling (every ~30min)
+    // No HTTP wake needed — notification is created in DB, agent polls it
+    console.log(`Task notification created for ${args.agentSessionKey}: ${args.taskTitle}`);
+    console.log(`Agent will pick it up on next cron poll.`);
+    return { success: true, result: "notification_created_polling_mode" };
   },
 });
 

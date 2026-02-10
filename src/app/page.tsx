@@ -351,7 +351,7 @@ function TaskDetail({
   const assignTask = useMutation(api.tasks.assign);
 
   // Issue 2: Always comment as user (main)
-  const commentAs = "main";
+  const commentAs = "human";
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
